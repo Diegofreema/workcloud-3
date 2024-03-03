@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 11,
-    backgroundColor: 'white',
+
     flexDirection: 'row',
   },
   image: {

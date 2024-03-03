@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Button, Switch, Text } from 'react-native-paper';
 import { defaultStyle } from '../../constants';
-// import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '@clerk/clerk-expo';
 import { colors } from '../../constants/Colors';
 
 import { useDarkMode } from '../../hooks/useDarkMode';
@@ -14,7 +14,7 @@ const account = (props: Props) => {
   const router = useRouter();
   const { darkMode, toggleDarkMode } = useDarkMode();
 
-  // const { signOut, isSignedIn } = useAuth();
+  const { signOut, isSignedIn } = useAuth();
   return (
     <View style={{ flex: 1 }}>
       <View
@@ -26,7 +26,7 @@ const account = (props: Props) => {
           justifyContent: 'center',
         }}
       >
-        {/* {!isSignedIn && (
+        {!isSignedIn && (
           <Button
             buttonColor={colors.buttonBlue}
             onPress={() => router.push('/login')}
@@ -37,8 +37,8 @@ const account = (props: Props) => {
           >
             Sign in
           </Button>
-        )} */}
-        {/* 
+        )}
+
         {isSignedIn && (
           <Button
             style={{ width: width * 0.4 }}
@@ -48,7 +48,7 @@ const account = (props: Props) => {
           >
             Sign out
           </Button>
-        )} */}
+        )}
       </View>
       <View
         style={{

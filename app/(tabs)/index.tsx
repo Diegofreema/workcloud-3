@@ -3,7 +3,7 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { router, useFocusEffect, useRouter } from 'expo-router';
 import { defaultStyle, fontFamily } from '../../constants';
 import { Header } from '../../components/Header';
-// import { useAuth } from '@clerk/clerk-expo';
+import { useAuth } from '@clerk/clerk-expo';
 import { ProfileHeader } from '../../components/ProfileHeader';
 import { colors } from '../../constants/Colors';
 import { useFollowers, usePersonalOrgs } from '../../lib/queries';
@@ -20,77 +20,76 @@ import { MyText } from '../../components/Ui/MyText';
 
 export default function TabOneScreen() {
   const router = useRouter();
-  // const { isLoaded, userId } = useAuth();
+  const { isLoaded, userId } = useAuth();
   const { data: orgs } = usePersonalOrgs();
 
-  // const loggedIn = isLoaded && !!userId;
+  const loggedIn = isLoaded && !!userId;
   const { onOpen } = useOrganizationModal();
 
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     if (loggedIn && orgs?.orgs?.length === 0) {
-  //       onOpen();
-  //     }
-  //   }, [])
-  // );
+  useFocusEffect(
+    useCallback(() => {
+      if (loggedIn && orgs?.orgs?.length === 0) {
+        onOpen();
+      }
+    }, [])
+  );
   const { data, isLoading, isFetching, error, isPending } = useFollowers();
   const { darkMode } = useDarkMode();
   return (
-    <Text>work</Text>
-    // <View style={[defaultStyle, styles.container]}>
-    //   <OrganizationModal />
-    //   <Header />
-    //   {loggedIn && <ProfileHeader id={userId} />}
-    //   {loggedIn ? (
-    //     <View style={{ marginVertical: 10 }}>
-    //       <HeadingText link="/connections" />
-    //     </View>
-    //   ) : (
-    //     <Text
-    //       style={{
-    //         color: darkMode ? 'white' : 'black',
-    //         fontFamily: 'PoppinsBold',
-    //         marginBottom: 10,
-    //       }}
-    //     >
-    //       Login in to see your connections
-    //     </Text>
-    //   )}
+    <View style={[defaultStyle, styles.container]}>
+      <OrganizationModal />
+      <Header />
+      {loggedIn && <ProfileHeader id={userId} />}
+      {loggedIn ? (
+        <View style={{ marginVertical: 10 }}>
+          <HeadingText link="/connections" />
+        </View>
+      ) : (
+        <Text
+          style={{
+            color: darkMode ? 'white' : 'black',
+            fontFamily: 'PoppinsBold',
+            marginBottom: 10,
+          }}
+        >
+          Login in to see your connections
+        </Text>
+      )}
 
-    //   {isFetching || isLoading || isPending ? (
-    //     <ActivityIndicator style={{ marginTop: 20 }} animating />
-    //   ) : loggedIn ? (
-    //     <FlatList
-    //       contentContainerStyle={{
-    //         gap: 15,
+      {isFetching || isLoading || isPending ? (
+        <ActivityIndicator style={{ marginTop: 20 }} animating />
+      ) : loggedIn ? (
+        <FlatList
+          contentContainerStyle={{
+            gap: 15,
 
-    //         paddingBottom: 50,
-    //       }}
-    //       data={[1, 2, 3]}
-    //       keyExtractor={(item, index) => index.toString()}
-    //       renderItem={({ item, index }) => {
-    //         const lastIndex = [1, 2, 3].length - 1;
-    //         const isLastItemOnList = index === lastIndex;
-    //         return <Item isLastItemOnList={isLastItemOnList} />;
-    //       }}
-    //       showsVerticalScrollIndicator={false}
-    //       ListEmptyComponent={() => {
-    //         return (
-    //           <Text
-    //             variant="titleLarge"
-    //             style={{
-    //               fontFamily: fontFamily.Bold,
-    //               marginTop: 30,
-    //               color: darkMode ? 'white' : 'black',
-    //             }}
-    //           >
-    //             {loggedIn ? 'No connections yet' : ''}
-    //           </Text>
-    //         );
-    //       }}
-    //     />
-    //   ) : null}
-    // </View>
+            paddingBottom: 50,
+          }}
+          data={[1, 2, 3]}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item, index }) => {
+            const lastIndex = [1, 2, 3].length - 1;
+            const isLastItemOnList = index === lastIndex;
+            return <Item isLastItemOnList={isLastItemOnList} />;
+          }}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={() => {
+            return (
+              <Text
+                variant="titleLarge"
+                style={{
+                  fontFamily: fontFamily.Bold,
+                  marginTop: 30,
+                  color: darkMode ? 'white' : 'black',
+                }}
+              >
+                {loggedIn ? 'No connections yet' : ''}
+              </Text>
+            );
+          }}
+        />
+      ) : null}
+    </View>
   );
 }
 

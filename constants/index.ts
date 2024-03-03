@@ -1,5 +1,5 @@
 export const defaultStyle = {
-  marginHorizontal: 15,
+  paddingHorizontal: 15,
 };
 
 export const days = [
