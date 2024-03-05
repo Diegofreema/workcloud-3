@@ -1,11 +1,4 @@
-import {
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import * as yup from 'yup';
 import RNPickerSelect from 'react-native-picker-select';
@@ -17,13 +10,8 @@ import { decode } from 'base64-arraybuffer';
 import * as FileSystem from 'expo-file-system';
 import { Button } from 'react-native-paper';
 import { useFormik } from 'formik';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useUser } from '@clerk/clerk-expo';
 import Toast from 'react-native-toast-message';
-import DocumentPicker, {
-  isCancel,
-  isInProgress,
-  types,
-} from 'react-native-document-picker';
 import { days, defaultStyle } from '../constants';
 import { AuthHeader } from '../components/AuthHeader';
 import { AuthTitle } from '../components/AuthTitle';
@@ -32,11 +20,9 @@ import { colors } from '../constants/Colors';
 import { Subtitle } from '../components/Subtitle';
 import { InputComponent } from '../components/InputComponent';
 import { supabase } from '../lib/supabase';
-import ImageItem from '../components/ImageItem';
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
-import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 const validationSchema = yup.object().shape({

@@ -16,9 +16,10 @@ import Toast from 'react-native-toast-message';
 import { GluestackUIProvider } from '@gluestack-ui/themed';
 import { config } from '@gluestack-ui/config';
 import { useDarkMode } from '@/hooks/useDarkMode';
-import { StatusBar } from 'react-native';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ClerkProvider } from '@clerk/clerk-expo';
+import { StatusBar } from 'expo-status-bar';
 const ClerkKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 const tokenCache = {
   async getToken(key: string) {
@@ -110,10 +111,7 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={darkMode ? DarkTheme : DefaultTheme}>
-      <StatusBar
-        barStyle={darkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={darkMode ? 'black' : 'white'}
-      />
+      <StatusBar style="dark" />
       <SafeAreaView
         style={{
           flex: 1,

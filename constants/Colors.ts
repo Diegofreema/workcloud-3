@@ -36,4 +36,5 @@ export const colors = {
   ripple: '#006898',
   summary: '#929292',
   cod: '#C0D1FE',
+  gray10: '#A1A1A1',
 };

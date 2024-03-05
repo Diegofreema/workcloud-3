@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
-import { Organization, Profile, connections } from '../constants/types';
-// import { useAuth } from '@clerk/clerk-expo';
+import { Organization, Profile, Wks, connections } from '../constants/types';
+import { useAuth } from '@clerk/clerk-expo';
 
 export const useFollowers = () => {
   const getFollowers = async () => {
@@ -21,12 +21,12 @@ export const useFollowers = () => {
   });
 };
 export const usePersonalOrgs = () => {
-  // const { userId } = useAuth();
+  const { userId } = useAuth();
   const getOrgs = async () => {
     const { data, error } = await supabase
       .from('workspace')
       .select()
-      .eq('owner_id', 'userId');
+      .eq('owner_id', userId);
 
     return {
       orgs: data as Organization[],
@@ -39,12 +39,12 @@ export const usePersonalOrgs = () => {
   });
 };
 export const useAssignedOrgs = () => {
-  // const { userId } = useAuth();
+  const { userId } = useAuth();
   const getOrgs = async () => {
     const { data, error } = await supabase
       .from('profile')
       .select('workspace_id(*)')
-      .eq('user_id', 'userId');
+      .eq('user_id', userId);
 
     return {
       orgs: data,
@@ -89,5 +89,42 @@ export const useProfile = (id: any) => {
   return useQuery({
     queryKey: ['profile'],
     queryFn: async () => getProfile(),
+  });
+};
+
+export const useGetWks = (name: any) => {
+  const getOrgs = async () => {
+    const { data, error } = await supabase
+      .from('wks')
+      .select()
+      .eq('orgId', name);
+
+    return {
+      wks: data as Wks[],
+      error,
+    };
+  };
+  return useQuery({
+    queryKey: ['wks'],
+    queryFn: async () => getOrgs(),
+  });
+};
+
+export const useWorkers = () => {
+  const { userId } = useAuth();
+  const getWorkers = async () => {
+    const { data, error } = await supabase
+      .from('workers')
+      .select()
+      .eq('userId', userId);
+
+    return {
+      worker: data,
+      error,
+    };
+  };
+  return useQuery({
+    queryKey: ['workers'],
+    queryFn: async () => getWorkers(),
   });
 };

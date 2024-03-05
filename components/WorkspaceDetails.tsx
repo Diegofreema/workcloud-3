@@ -1,20 +1,28 @@
 import { Image } from 'expo-image';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
 import { colors } from '../constants/Colors';
 
 type Props = {
   uri: string;
   name: string;
   darkMode: boolean;
+  onPress: () => void;
 };
 
 export const WorkspaceDetails = ({
   uri,
   name,
   darkMode,
+  onPress,
 }: Props): JSX.Element => {
   return (
-    <View style={{ alignItems: 'center', gap: 5, minWidth: 70 }}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        { opacity: pressed ? 0.5 : 1 },
+        { alignItems: 'center', gap: 5, minWidth: 70 },
+      ]}
+    >
       <Image source={uri} style={styles.image} />
       <Text
         style={{
@@ -25,7 +33,7 @@ export const WorkspaceDetails = ({
       >
         {name}
       </Text>
-    </View>
+    </Pressable>
   );
 };
 

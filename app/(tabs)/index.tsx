@@ -6,8 +6,8 @@ import { Header } from '../../components/Header';
 import { useAuth } from '@clerk/clerk-expo';
 import { ProfileHeader } from '../../components/ProfileHeader';
 import { colors } from '../../constants/Colors';
-import { useFollowers, usePersonalOrgs } from '../../lib/queries';
-import { ActivityIndicator, Text } from 'react-native-paper';
+import { useFollowers, usePersonalOrgs, useWorkers } from '../../lib/queries';
+import { ActivityIndicator, Button, Text } from 'react-native-paper';
 import { useContext, useCallback, useEffect, useLayoutEffect } from 'react';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { useOrganizationModal } from '../../hooks/useOrganizationModal';
@@ -17,24 +17,73 @@ import { HStack } from '@gluestack-ui/themed';
 import { Image } from 'expo-image';
 import { VStack } from '@gluestack-ui/themed';
 import { MyText } from '../../components/Ui/MyText';
+import { LoadingComponent } from '@/components/Ui/LoadingComponent';
+import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 
 export default function TabOneScreen() {
   const router = useRouter();
   const { isLoaded, userId } = useAuth();
-  const { data: orgs } = usePersonalOrgs();
+  const {
+    data: orgs,
+    isPending: isPendingOrgs,
+    isPaused,
+    isError,
+    refetch,
+    isRefetching: isRefetchingOrgs,
+  } = usePersonalOrgs();
+  const {
+    data: worker,
+    isPending: isPendingWorker,
+    isPaused: isPausedWorker,
+    isError: isErrorWorker,
+    refetch: refetchWorker,
+    isRefetching: isRefetchingWorker,
+  } = useWorkers();
 
   const loggedIn = isLoaded && !!userId;
   const { onOpen } = useOrganizationModal();
-
+  const isNotAWorker = worker?.worker?.length === 0;
   useFocusEffect(
     useCallback(() => {
-      if (loggedIn && orgs?.orgs?.length === 0) {
+      if (
+        (loggedIn && orgs?.orgs?.length === 0) ||
+        (loggedIn && isNotAWorker)
+      ) {
         onOpen();
       }
     }, [])
   );
-  const { data, isLoading, isFetching, error, isPending } = useFollowers();
+  const {
+    data,
+
+    isPaused: isPausedFollowers,
+    error,
+    isPending,
+    refetch: refetchFollowers,
+    isRefetching: isRefetchingFollowers,
+  } = useFollowers();
   const { darkMode } = useDarkMode();
+  const refetchData = () => {
+    refetchFollowers();
+    refetchWorker();
+    refetch();
+  };
+  const isRefetching =
+    isRefetchingOrgs || isRefetchingWorker || isRefetchingFollowers;
+  if (!isLoaded || isPending || isPendingOrgs || isPendingWorker) {
+    return <LoadingComponent />;
+  }
+
+  if (
+    error ||
+    isError ||
+    isErrorWorker ||
+    isPaused ||
+    isPausedWorker ||
+    isPausedFollowers
+  ) {
+    return <ErrorComponent refetch={refetchData} />;
+  }
   return (
     <View style={[defaultStyle, styles.container]}>
       <OrganizationModal />
@@ -56,10 +105,12 @@ export default function TabOneScreen() {
         </Text>
       )}
 
-      {isFetching || isLoading || isPending ? (
+      {isPending ? (
         <ActivityIndicator style={{ marginTop: 20 }} animating />
       ) : loggedIn ? (
         <FlatList
+          onRefresh={refetchData}
+          refreshing={isRefetching}
           contentContainerStyle={{
             gap: 15,
 
@@ -89,6 +140,10 @@ export default function TabOneScreen() {
           }}
         />
       ) : null}
+
+      <Button onPress={() => router.push('/create-worker-profile')}>
+        Worker
+      </Button>
     </View>
   );
 }

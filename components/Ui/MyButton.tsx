@@ -34,7 +34,7 @@ export const MyButton = ({
       ]}
       labelStyle={{
         fontFamily: fontFamily.Medium,
-        fontSize: 9,
+        fontSize: 14,
       }}
     >
       {children}

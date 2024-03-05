@@ -35,3 +35,12 @@ export type Profile = {
   gender: string;
   user_id: string;
 };
+
+export type Wks = {
+  active: boolean;
+  created_at: string;
+  id: number;
+  leisure: boolean;
+  role: string;
+  waiting_list: string;
+};

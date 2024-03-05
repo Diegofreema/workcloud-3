@@ -1,12 +1,12 @@
 import { View, ScrollView, StyleSheet, Pressable } from 'react-native';
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthTitle } from '../components/AuthTitle';
-import { Button, Text, TextInput } from 'react-native-paper';
-import Colors, { colors } from '../constants/Colors';
+import { Button, Text } from 'react-native-paper';
+import { colors } from '../constants/Colors';
 import { InputComponent } from '../components/InputComponent';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFormik } from 'formik';
-import { Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import RNPickerSelect from 'react-native-picker-select';
 import { supabase } from '../lib/supabase';
 import * as yup from 'yup';
@@ -34,16 +34,16 @@ const signup = (props: Props) => {
 
   const [show, setShow] = useState(false);
   const router = useRouter();
-  // useEffect(() => {
-  //   if (isLoaded && !isSignedIn) {
-  //     Toast.show({
-  //       type: 'error',
-  //       text1: 'Unauthorized',
-  //       text2: 'Please login to continue',
-  //     });
-  //     router.replace('/login');
-  //   }
-  // }, []);
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      Toast.show({
+        type: 'error',
+        text1: 'Unauthorized',
+        text2: 'Please login to continue',
+      });
+      router.replace('/login');
+    }
+  }, []);
 
   const onChange = (event: any, selectedDate: any) => {
     const currentDate = selectedDate;
