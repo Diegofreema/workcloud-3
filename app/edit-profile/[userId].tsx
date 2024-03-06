@@ -4,14 +4,14 @@ import { useLocalSearchParams } from 'expo-router';
 import { defaultStyle } from '../../constants/index';
 import { HeaderNav } from '../../components/HeaderNav';
 import { ProfileUpdateForm } from '../../components/Forms/ProfileUpdateForm';
-import { SavedDialog } from '../../components/Dialogs/SavedDialog';
+import { CompleteDialog } from '../../components/Dialogs/SavedDialog';
 
 const UpdateProfile = () => {
   const { userId } = useLocalSearchParams();
 
   return (
     <>
-      <SavedDialog />
+      <CompleteDialog text="Changes saved successfully" />
 
       <View style={{ zIndex: -2, ...defaultStyle }}>
         <HeaderNav title="Edit Profile" />

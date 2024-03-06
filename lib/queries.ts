@@ -1,6 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
-import { Organization, Profile, Wks, connections } from '../constants/types';
+import {
+  Organization,
+  Profile,
+  Wks,
+  Workers,
+  connections,
+} from '../constants/types';
 import { useAuth } from '@clerk/clerk-expo';
 
 export const useFollowers = () => {
@@ -119,12 +125,84 @@ export const useWorkers = () => {
       .eq('userId', userId);
 
     return {
-      worker: data,
+      worker: data as Workers[],
       error,
     };
   };
   return useQuery({
     queryKey: ['workers'],
     queryFn: async () => getWorkers(),
+  });
+};
+
+export const useGetPersonalWorkers = (id: any) => {
+  const getWorkers = async () => {
+    const { data, error } = await supabase
+      .from('workers')
+      .select()
+      .eq('orgId', id);
+
+    return {
+      worker: data as Workers[],
+      error,
+    };
+  };
+  return useQuery({
+    queryKey: ['personal_workers'],
+    queryFn: async () => getWorkers(),
+  });
+};
+export const useGetOtherWorkers = () => {
+  const { userId } = useAuth();
+  const getWorkers = async () => {
+    const { data, error } = await supabase
+      .from('workers')
+      .select()
+      .neq('userId', userId);
+
+    return {
+      worker: data as Workers[],
+      error,
+    };
+  };
+  return useQuery({
+    queryKey: ['other_workers'],
+    queryFn: async () => getWorkers(),
+  });
+};
+
+export const useGetSingleWorker = (id: string) => {
+  const getWorkers = async () => {
+    const { data, error } = await supabase
+      .from('workers')
+      .select(`*, workspace(*)`)
+      .eq('id', id);
+
+    return {
+      worker: data as Workers[],
+      error,
+    };
+  };
+  return useQuery({
+    queryKey: ['worker'],
+    queryFn: async () => getWorkers(),
+  });
+};
+
+export const usePendingWorkers = (id: string) => {
+  const getPendingWorker = async () => {
+    const { data, error } = await supabase
+      .from('requests')
+      .select(`*, workspace(*)`)
+      .eq('employerId', id);
+
+    return {
+      worker: data,
+      error,
+    };
+  };
+  return useQuery({
+    queryKey: ['pending_worker'],
+    queryFn: async () => getPendingWorker(),
   });
 };

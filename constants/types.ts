@@ -44,3 +44,20 @@ export type Wks = {
   role: string;
   waiting_list: string;
 };
+
+export type Workers = {
+  created_at: string;
+  email: string;
+  exp: string;
+  gender: string;
+  id: number;
+  imageUrl: string;
+  location: string;
+  name: string;
+  orgId: string | null;
+  qualification: string;
+  skill: string;
+  userId: string;
+  workspaceId: string | null;
+  role: string;
+};

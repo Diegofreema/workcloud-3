@@ -29,7 +29,6 @@ export const HeaderNav = ({
         paddingVertical: 5,
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -51,7 +50,7 @@ export const HeaderNav = ({
             style={{
               color: darkMode ? 'white' : 'black',
               fontFamily: 'PoppinsBold',
-              fontSize: 15,
+              fontSize: 20,
             }}
           >
             {title}

@@ -15,6 +15,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Wks } from '@/constants/types';
 import { AntDesign, EvilIcons, FontAwesome } from '@expo/vector-icons';
 import { useDeleteWks } from '@/hooks/useDeleteWks';
+import { DottedButton } from '../Ui/DottedButton';
 
 const links = [
   {
@@ -67,20 +68,8 @@ export const CreateWorkspaceModal = ({ wks }: { wks: Wks[] }) => {
               style={{ fontWeight: '300' }}
             />
           </Pressable>
-          <View style={styles.row}>
-            <AntDesign name="plus" size={24} color="black" />
-            <Pressable
-              onPress={handleClose}
-              style={({ pressed }) => [
-                { opacity: pressed ? 0.5 : 1 },
-                { padding: 5 },
-              ]}
-            >
-              <MyText poppins="Light" fontSize={15}>
-                Create personal WKS
-              </MyText>
-            </Pressable>
-          </View>
+
+          <DottedButton onPress={handleClose} text="Create personal WKS" />
           <View style={{ marginTop: 20, width: '100%' }}>
             <FlatList
               showsVerticalScrollIndicator={false}
@@ -176,16 +165,5 @@ const styles = StyleSheet.create({
     top: 10,
     right: 15,
     padding: 4,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 20,
-    borderWidth: 1,
-    borderColor: colors.gray10,
-    padding: 10,
-    borderRadius: 10,
-    borderStyle: 'dashed',
   },
 });

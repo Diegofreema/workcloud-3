@@ -2,32 +2,52 @@ import { StyleSheet, View, Text, Image } from 'react-native';
 import { Dialog } from 'react-native-paper';
 import { MyText } from '../Ui/MyText';
 import { useSaved } from '../../hooks/useSaved';
+import Modal from 'react-native-modal';
+type Props = {
+  text: string;
+};
 
-type Props = {};
-
-export const SavedDialog = ({}: Props): JSX.Element => {
+export const CompleteDialog = ({ text }: Props): JSX.Element => {
   const { isOpen, onClose } = useSaved();
   return (
-    <Dialog style={styles.dialog} visible={isOpen} onDismiss={onClose}>
-      <MyText poppins="Medium" fontSize={15} style={{ marginBottom: 30 }}>
-        Changes saved successfully
-      </MyText>
-      <Dialog.Content>
-        <Image
-          source={require('../../assets/images/good.png')}
-          style={{ marginTop: 'auto' }}
-        />
-      </Dialog.Content>
-    </Dialog>
+    <View>
+      <Modal
+        hasBackdrop={false}
+        onDismiss={onClose}
+        animationIn={'slideInDown'}
+        isVisible={isOpen}
+        onBackButtonPress={onClose}
+        onBackdropPress={onClose}
+      >
+        <View style={styles.centeredView}>
+          <MyText poppins="Medium" fontSize={15} style={{ marginBottom: 30 }}>
+            {text}
+          </MyText>
+
+          <Image
+            source={require('../../assets/images/good.png')}
+            style={{ marginTop: 'auto' }}
+          />
+        </View>
+      </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  dialog: {
-    zIndex: 1,
+  centeredView: {
     backgroundColor: 'white',
-    borderRadius: 6,
-    padding: 20,
+    paddingVertical: 20,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+
+    borderRadius: 15,
   },
 });

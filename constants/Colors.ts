@@ -37,4 +37,6 @@ export const colors = {
   summary: '#929292',
   cod: '#C0D1FE',
   gray10: '#A1A1A1',
+  buttonSmall: '#F2F2F2',
+  lightBlueButton: '#DFE8FF',
 };

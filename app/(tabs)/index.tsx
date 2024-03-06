@@ -45,10 +45,7 @@ export default function TabOneScreen() {
   const isNotAWorker = worker?.worker?.length === 0;
   useFocusEffect(
     useCallback(() => {
-      if (
-        (loggedIn && orgs?.orgs?.length === 0) ||
-        (loggedIn && isNotAWorker)
-      ) {
+      if (loggedIn && orgs?.orgs?.length === 0 && loggedIn && isNotAWorker) {
         onOpen();
       }
     }, [])
@@ -84,6 +81,9 @@ export default function TabOneScreen() {
   ) {
     return <ErrorComponent refetch={refetchData} />;
   }
+
+  console.log(worker);
+
   return (
     <View style={[defaultStyle, styles.container]}>
       <OrganizationModal />
@@ -141,9 +141,7 @@ export default function TabOneScreen() {
         />
       ) : null}
 
-      <Button onPress={() => router.push('/create-worker-profile')}>
-        Worker
-      </Button>
+      <Button onPress={() => router.push('/allStaffs')}>Worker</Button>
     </View>
   );
 }

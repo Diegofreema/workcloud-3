@@ -37,15 +37,15 @@ export const AuthHeader = ({ path, style }: Props) => {
           marginBottom: 14,
           marginTop: pathname === '/login' ? 20 : 0,
           flexDirection: 'row',
-          alignItems: 'center',
-          gap: 20,
+
+          gap: 10,
         },
         style,
       ]}
     >
       <FontAwesome
         name="angle-left"
-        size={35}
+        size={30}
         color={darkMode ? 'white' : 'black'}
       />
       {path && (
@@ -53,7 +53,7 @@ export const AuthHeader = ({ path, style }: Props) => {
           style={{
             color: darkMode ? 'white' : 'black',
 
-            fontSize: 15,
+            fontSize: 20,
             fontFamily: 'PoppinsBold',
           }}
         >
