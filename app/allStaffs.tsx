@@ -1,11 +1,11 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDetailsToAdd } from '@/hooks/useDetailsToAdd';
 import { AuthHeader } from '@/components/AuthHeader';
 import { HeaderNav } from '@/components/HeaderNav';
 import { Button } from 'react-native-paper';
 import { EvilIcons } from '@expo/vector-icons';
-import { useGetOtherWorkers } from '@/lib/queries';
+import { useGetOtherWorkers, usePendingWorkers } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { Workers } from '@/constants/types';
@@ -19,6 +19,7 @@ type Props = {};
 
 const AllStaffs = (props: Props) => {
   const { id, role } = useDetailsToAdd();
+  const [staffs, setStaffs] = useState<Workers[] | undefined>([]);
   console.log('🚀 ~ AllStaffs ~ id:', id, 'role', role);
   const {
     data,
@@ -29,19 +30,49 @@ const AllStaffs = (props: Props) => {
     isRefetching,
     isRefetchError,
   } = useGetOtherWorkers();
-  if (isPaused || isError || isRefetchError) {
-    return <ErrorComponent refetch={refetch} />;
+  const {
+    data: pendingData,
+    isPending: isPendingData,
+    isError: isErrorData,
+    isPaused: isPausedData,
+    refetch: refetchData,
+    isRefetching: isRefetchingData,
+    isRefetchError: isRefetchErrorData,
+  } = usePendingWorkers();
+  useEffect(() => {
+    if (data?.worker) {
+      setStaffs(data?.worker);
+    }
+  }, [data?.worker]);
+
+  const handleRefetch = () => {
+    refetchData();
+    refetch();
+  };
+  if (
+    isPaused ||
+    isError ||
+    isPausedData ||
+    isErrorData ||
+    isRefetchError ||
+    isRefetchErrorData
+  ) {
+    return <ErrorComponent refetch={handleRefetch} />;
   }
 
-  if (isPending || isRefetching) {
+  if (isPending || isPendingData) {
     return <LoadingComponent />;
   }
+
+  const onRefreshing = isRefetching || isRefetchingData;
 
   return (
     <View style={styles.container}>
       <HeaderNav title="Add staff" RightComponent={RightComponent} />
       <FlatList
-        data={data?.worker}
+        onRefresh={handleRefetch}
+        refreshing={onRefreshing}
+        data={staffs}
         renderItem={({ item }) => (
           <UserPreview
             id={item?.id}
@@ -53,6 +84,16 @@ const AllStaffs = (props: Props) => {
         )}
         style={{ marginTop: 20 }}
         ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+        keyExtractor={(item) => item?.id.toString()}
+        ListEmptyComponent={() => (
+          <MyText
+            poppins="Bold"
+            fontSize={20}
+            style={{ textAlign: 'center', marginBottom: 20 }}
+          >
+            No staffs found
+          </MyText>
+        )}
       />
     </View>
   );

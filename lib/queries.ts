@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 import {
   Organization,
   Profile,
+  Requests,
   Wks,
   Workers,
   connections,
@@ -184,25 +185,26 @@ export const useGetSingleWorker = (id: string) => {
     };
   };
   return useQuery({
-    queryKey: ['worker'],
+    queryKey: ['worker', id],
     queryFn: async () => getWorkers(),
   });
 };
 
-export const usePendingWorkers = (id: string) => {
+export const usePendingWorkers = () => {
+  const { userId } = useAuth();
   const getPendingWorker = async () => {
     const { data, error } = await supabase
       .from('requests')
-      .select(`*, workspace(*)`)
-      .eq('employerId', id);
+      .select(`*, workers(*)`)
+      .eq('employerId', userId);
 
     return {
-      worker: data,
+      requests: data as Requests[],
       error,
     };
   };
   return useQuery({
-    queryKey: ['pending_worker'],
+    queryKey: ['pending_worker', userId],
     queryFn: async () => getPendingWorker(),
   });
 };

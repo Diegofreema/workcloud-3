@@ -2,6 +2,7 @@ import { StyleSheet, View, Text } from 'react-native';
 import { defaultStyle } from '../../constants/index';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { MyButton } from './MyButton';
+import { useState } from 'react';
 
 type Props = {
   refetch: any;
@@ -9,6 +10,11 @@ type Props = {
 
 export const ErrorComponent = ({ refetch }: Props): JSX.Element => {
   const { darkMode } = useDarkMode();
+  const [error, setError] = useState(false);
+  const handleRefetch = () => {
+    setError((prev) => !prev);
+    refetch();
+  };
   return (
     <View
       style={{
@@ -24,11 +30,12 @@ export const ErrorComponent = ({ refetch }: Props): JSX.Element => {
           color: darkMode ? 'white' : 'black',
           fontFamily: 'PoppinsBold',
           fontSize: 20,
+          textAlign: 'center',
         }}
       >
         Something went wrong, please try again
       </Text>
-      <MyButton onPress={refetch}>Retry</MyButton>
+      <MyButton onPress={handleRefetch}>Retry</MyButton>
     </View>
   );
 };

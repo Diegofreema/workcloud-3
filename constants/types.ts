@@ -61,3 +61,15 @@ export type Workers = {
   workspaceId: string | null;
   role: string;
 };
+
+export type Requests = {
+  created_at: string;
+  employerId: string;
+  id: number;
+  responsibility: string;
+  role: string;
+  salary: string;
+  status: string;
+  workerId: number;
+  workers: Workers;
+};

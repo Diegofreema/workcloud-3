@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { HStack, ScrollView, VStack } from '@gluestack-ui/themed';
 import { HeaderNav } from '@/components/HeaderNav';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useGetSingleWorker } from '@/lib/queries';
+import { useGetSingleWorker, usePendingWorkers } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { UserPreview } from '@/components/Ui/UserPreview';
@@ -17,10 +17,14 @@ import {
 } from '@expo/vector-icons';
 import { MyText } from '@/components/Ui/MyText';
 import { format, formatDistance, formatRelative, subDays } from 'date-fns';
+import Toast from 'react-native-toast-message';
+import { supabase } from '@/lib/supabase';
+import { useQueryClient } from '@tanstack/react-query';
 type Props = {};
 
 const Profile = (props: Props) => {
   const { profileId } = useLocalSearchParams<{ profileId: string }>();
+  const [requestPending, setRequestPending] = useState(false);
   const router = useRouter();
   const {
     data,
@@ -31,14 +35,38 @@ const Profile = (props: Props) => {
     isRefetching,
     isRefetchError,
   } = useGetSingleWorker(profileId);
-
-  if (isError || isRefetchError || isPaused) {
+  const {
+    data: pendingData,
+    isPending: isPendingData,
+    isError: isErrorData,
+    refetch: refetchData,
+    isRefetching: isRefetchingData,
+    isRefetchError: isRefetchErrorData,
+  } = usePendingWorkers();
+  const queryClient = useQueryClient();
+  if (
+    isError ||
+    isRefetchError ||
+    isPaused ||
+    isErrorData ||
+    isRefetchErrorData ||
+    pendingData?.error ||
+    data?.error
+  ) {
     return <ErrorComponent refetch={refetch} />;
   }
 
-  if (isPending) {
+  if (isPending || isPendingData) {
     return <LoadingComponent />;
   }
+
+  const isInPending = !!pendingData?.requests?.find(
+    (worker) => worker.workerId === +profileId
+  );
+
+  const requestToCancel = pendingData?.requests?.find(
+    (worker) => worker.workerId === +profileId
+  );
 
   const formattedSkills = (text: string) => {
     if (text.includes(',')) {
@@ -54,7 +82,31 @@ const Profile = (props: Props) => {
     }
   };
   const sendMessage = () => {};
-  const sendRequest = () => {
+  const cancelRequest = async () => {
+    const { error } = await supabase
+      .from('requests')
+      .delete()
+      .eq('id', requestToCancel?.id);
+    if (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error while cancelling request',
+      });
+    } else {
+      queryClient.invalidateQueries({
+        queryKey: ['pending_worker'],
+      });
+      Toast.show({
+        type: 'success',
+        text1: 'Request Cancelled',
+      });
+    }
+  };
+  const handleRequest = () => {
+    if (isInPending) {
+      return cancelRequest();
+    }
+
     router.push(`/completeRequest/${profileId}`);
   };
   return (
@@ -71,11 +123,11 @@ const Profile = (props: Props) => {
 
       <HStack gap={20} mt={20}>
         <MyButton
-          onPress={sendRequest}
+          onPress={handleRequest}
           buttonColor={colors.dialPad}
           style={{ borderRadius: 8, height: 45 }}
         >
-          Send Request
+          {isInPending ? 'Cancel Request' : 'Send Request'}
         </MyButton>
         <MyButton
           onPress={sendMessage}

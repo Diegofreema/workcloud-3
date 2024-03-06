@@ -2,7 +2,7 @@ import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
 import React, { useEffect } from 'react';
 import { Container } from '@/components/Ui/Container';
 import { HeaderNav } from '@/components/HeaderNav';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useGetSingleWorker } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
@@ -19,6 +19,7 @@ import { CompleteDialog } from '@/components/Dialogs/SavedDialog';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@clerk/clerk-expo';
 import Toast from 'react-native-toast-message';
+import { useQueryClient } from '@tanstack/react-query';
 type Props = {};
 const validationSchema = yup.object().shape({
   role: yup.string().required('Role is required'),
@@ -33,6 +34,8 @@ const CompleteRequest = (props: Props) => {
   const { role: workerRole } = useDetailsToAdd();
   const { onOpen, isOpen, onClose } = useSaved();
   const { userId, isLoaded } = useAuth();
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const {
     data,
     isPaused,
@@ -87,6 +90,9 @@ const CompleteRequest = (props: Props) => {
         });
       }
       if (!error) {
+        queryClient.invalidateQueries({
+          queryKey: ['pending_worker'],
+        });
         resetForm();
         onOpen();
       }
@@ -104,6 +110,7 @@ const CompleteRequest = (props: Props) => {
     let interval: NodeJS.Timeout;
     if (isOpen) {
       interval = setTimeout(() => {
+        router.push('/allStaffs');
         onClose();
       }, 1500);
     }
