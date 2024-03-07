@@ -7,6 +7,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { MyText } from '../Ui/MyText';
 import { colors } from '../../constants/Colors';
 import { VideoPreview } from '../Ui/VideoPreview';
+import { useAuth } from '@clerk/clerk-expo';
 
 type Props = {};
 export const call = {
@@ -18,11 +19,14 @@ export const call = {
 const fourItems = [1, 2, 3];
 export const BottomCard = ({}: Props): JSX.Element => {
   const { records } = useLocalSearchParams();
+  const { signOut } = useAuth();
   const handleNavigate = () => {
     router.push('/settings');
   };
 
-  const logout = () => {};
+  const logout = async () => {
+    await signOut();
+  };
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <HeadingText
@@ -59,13 +63,16 @@ export const BottomCard = ({}: Props): JSX.Element => {
           </HStack>
         </Pressable>
 
-        <Pressable onPress={logout}>
-          <HStack space="sm" mt={20}>
+        <Pressable
+          onPress={logout}
+          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
+        >
+          <HStack space="sm" mt={20} alignItems="center">
             <Image
               source={require('../../assets/images/exit.png')}
-              style={{ width: 18, height: 18 }}
+              style={{ width: 25, height: 25 }}
             />
-            <MyText poppins="Medium" fontSize={10}>
+            <MyText poppins="Medium" fontSize={13}>
               Logout
             </MyText>
           </HStack>

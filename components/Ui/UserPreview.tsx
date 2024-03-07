@@ -6,10 +6,11 @@ import { Pressable } from 'react-native';
 import { MyText } from './MyText';
 
 type PreviewWorker = {
-  imageUrl: string;
-  name: string;
+  name: any;
+  imageUrl?: string;
+
   subText?: string;
-  id?: number;
+  id?: any;
   navigate?: boolean;
   roleText?: string;
   workspaceId?: string | null;

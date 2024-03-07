@@ -4,34 +4,25 @@ import { MyText } from '../Ui/MyText';
 import { Image } from 'expo-image';
 import { colors } from '../../constants/Colors';
 import { useRouter } from 'expo-router';
+import {} from '@clerk/clerk-expo';
+import { UserPreview } from '../Ui/UserPreview';
+type Props = {
+  id?: string;
+  image?: string;
+  name?: string | null;
+};
 
-type Props = {};
-
-export const TopCard = ({}: Props): JSX.Element => {
+export const TopCard = ({ id, image, name }: Props): JSX.Element => {
   const router = useRouter();
 
   const handleNavigate = () => {
-    router.push(`/edit-profile/${'1'}`);
+    router.push(`/edit-profile/${id}`);
   };
   return (
     <View>
       <View style={styles.absolute} />
       <View style={styles.topCard}>
-        <HStack space="md">
-          <Image
-            source={{ uri: 'https://via.placeholder.com/48x48' }}
-            style={{ width: 58, height: 58, borderRadius: 9999 }}
-          />
-          <VStack>
-            <MyText fontSize={12} poppins="Bold">
-              Clara Kalu
-            </MyText>
-            <MyText style={{ color: colors.textGray }} poppins="Light">
-              Joined fidelity bank and 99 other workspaces
-            </MyText>
-          </VStack>
-        </HStack>
-
+        <UserPreview imageUrl={image} name={name} id={id} />
         <HStack alignContent="center" justifyContent="space-between" mt={15}>
           <VStack justifyContent="center" alignItems="center">
             <MyText poppins="Medium">Owned WS</MyText>

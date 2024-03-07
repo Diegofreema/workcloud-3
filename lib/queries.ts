@@ -99,12 +99,12 @@ export const useProfile = (id: any) => {
   });
 };
 
-export const useGetWks = (name: any) => {
+export const useGetWks = (id: any) => {
   const getOrgs = async () => {
     const { data, error } = await supabase
       .from('wks')
       .select()
-      .eq('orgId', name);
+      .eq('ownerId', id);
 
     return {
       wks: data as Wks[],

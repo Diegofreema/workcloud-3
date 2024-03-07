@@ -5,7 +5,7 @@ import { Link, useRouter } from 'expo-router';
 import { Text } from 'react-native-paper';
 import { useDarkMode } from '../hooks/useDarkMode';
 type Props = {
-  id: string;
+  id: string | null;
 };
 
 export const ProfileHeader = ({ id }: Props): JSX.Element | undefined => {

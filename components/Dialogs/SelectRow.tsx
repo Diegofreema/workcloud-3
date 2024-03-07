@@ -23,10 +23,11 @@ const roles = [
   { role: 'Logistics' },
   { role: 'ICT Processor' },
 ];
-export const SelectRow = ({ name }: { name: any }) => {
+export const SelectRow = () => {
   const { isOpen, onClose } = useSelectRow();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { userId, isSignedIn } = useAuth();
 
   const navigate = (role: string) => {
     onClose();
@@ -35,9 +36,10 @@ export const SelectRow = ({ name }: { name: any }) => {
   };
 
   const createWorkspace = async (role: string) => {
+    if (!isSignedIn) return;
     const { error } = await supabase
       .from('wks')
-      .upsert({ orgId: name, role })
+      .upsert({ ownerId: userId, role })
       .select();
     if (error) {
       console.log(error);

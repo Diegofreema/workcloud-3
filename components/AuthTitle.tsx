@@ -14,7 +14,7 @@ export const AuthTitle = ({ children }: Props): JSX.Element => {
       variant="titleLarge"
       style={{
         fontFamily: 'PoppinsBold',
-        fontSize: 14,
+        fontSize: 20,
         maxWidth: 200,
         color: darkMode ? 'white' : 'black',
       }}

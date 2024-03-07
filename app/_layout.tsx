@@ -5,9 +5,15 @@ import {
   ThemeProvider,
 } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import {
+  Slot,
+  Stack,
+  useNavigation,
+  useRouter,
+  useSegments,
+} from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import * as Updates from 'expo-updates';
 import * as SecureStore from 'expo-secure-store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,8 +24,9 @@ import { config } from '@gluestack-ui/config';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ClerkProvider } from '@clerk/clerk-expo';
+import { ClerkProvider, SignedIn, SignedOut, useAuth } from '@clerk/clerk-expo';
 import { StatusBar } from 'expo-status-bar';
+
 const ClerkKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 const tokenCache = {
   async getToken(key: string) {
@@ -108,6 +115,31 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { darkMode } = useDarkMode();
+  const segment = useSegments();
+  const rootNavigation = useNavigation();
+  const [isReady, setIsReady] = useState(false);
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    const unsubscribe = rootNavigation?.addListener('state', () => {
+      setIsReady(true);
+    });
+
+    return () => unsubscribe && unsubscribe();
+  }, [rootNavigation]);
+
+  useEffect(() => {
+    if (!isReady || !isLoaded) {
+      return;
+    }
+    const isAuthGroup = segment[0] === '(auth)';
+
+    if (isLoaded && !isSignedIn && !isAuthGroup) {
+      router.replace('/');
+    } else if (isSignedIn && isAuthGroup) {
+      router.replace('/home');
+    }
+  }, [isLoaded, isSignedIn, segment, isReady]);
 
   return (
     <ThemeProvider value={darkMode ? DarkTheme : DefaultTheme}>
@@ -117,10 +149,16 @@ function RootLayoutNav() {
           flex: 1,
         }}
       >
-        <Stack
-          screenOptions={{ headerShown: false }}
-          initialRouteName="(tabs)"
-        />
+        <SignedIn>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(app)" />
+          </Stack>
+        </SignedIn>
+        <SignedOut>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)/index" />
+          </Stack>
+        </SignedOut>
       </SafeAreaView>
     </ThemeProvider>
   );
