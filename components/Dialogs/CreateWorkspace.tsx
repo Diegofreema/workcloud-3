@@ -75,7 +75,7 @@ export const CreateWorkspaceModal = ({ wks }: { wks: Wks[] }) => {
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
                 <MyText
-                  style={{ textAlign: 'center' }}
+                  style={{ verticalAlign: 'middle' }}
                   poppins="Medium"
                   fontSize={16}
                 >

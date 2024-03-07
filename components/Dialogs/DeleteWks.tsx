@@ -52,7 +52,7 @@ export const DeleteWksSpaceModal = () => {
           <MyText
             poppins="Bold"
             fontSize={17}
-            style={{ textAlign: 'center', marginBottom: 15 }}
+            style={{ verticalAlign: 'middle', marginBottom: 15 }}
           >
             Are you sure you want to delete this workspace?
           </MyText>

@@ -13,7 +13,7 @@ export const EmptyText = ({ text }: Props): JSX.Element => {
       style={{
         color: darkMode ? 'white' : 'black',
         fontFamily: 'PoppinsMedium',
-        textAlign: 'center',
+        verticalAlign: 'middle',
         marginTop: 10,
       }}
       variant="titleSmall"

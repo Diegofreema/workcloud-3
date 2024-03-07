@@ -157,8 +157,6 @@ export default function TabOneScreen() {
           );
         }}
       />
-
-      <Button onPress={() => router.push('/allStaffs')}>Worker</Button>
     </View>
   );
 }

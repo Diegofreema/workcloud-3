@@ -39,7 +39,7 @@ const PendingStaffs = (props: Props) => {
           <MyText
             poppins="Bold"
             fontSize={20}
-            style={{ textAlign: 'center', marginTop: 20 }}
+            style={{ verticalAlign: 'middle', marginTop: 20 }}
           >
             No pending staffs
           </MyText>

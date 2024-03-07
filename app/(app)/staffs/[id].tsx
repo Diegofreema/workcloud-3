@@ -118,7 +118,11 @@ const Staffs = (props: Props) => {
         data={workers}
         renderItem={({ item }) => <Text>{item.name}</Text>}
         ListEmptyComponent={() => (
-          <MyText poppins="Bold" style={{ textAlign: 'center' }} fontSize={20}>
+          <MyText
+            poppins="Bold"
+            style={{ verticalAlign: 'middle' }}
+            fontSize={20}
+          >
             No Staffs yet
           </MyText>
         )}

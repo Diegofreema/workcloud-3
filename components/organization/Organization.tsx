@@ -60,13 +60,13 @@ const styles = StyleSheet.create({
   open: {
     backgroundColor: colors.openBackgroundColor,
     color: colors.openTextColor,
-    textAlign: 'center',
+    verticalAlign: 'middle',
     borderRadius: 10,
   },
   close: {
     backgroundColor: colors.closeBackgroundColor,
     color: colors.closeTextColor,
-    textAlign: 'center',
+    verticalAlign: 'middle',
     borderRadius: 10,
   },
 

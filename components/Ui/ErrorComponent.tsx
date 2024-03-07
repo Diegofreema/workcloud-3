@@ -30,7 +30,7 @@ export const ErrorComponent = ({ refetch }: Props): JSX.Element => {
           color: darkMode ? 'white' : 'black',
           fontFamily: 'PoppinsBold',
           fontSize: 20,
-          textAlign: 'center',
+          verticalAlign: 'middle',
         }}
       >
         Something went wrong, please try again

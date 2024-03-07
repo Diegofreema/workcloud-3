@@ -31,7 +31,11 @@ export const OrganizationModal = ({}: Props): JSX.Element => {
     <Portal>
       <Dialog visible={isOpen} onDismiss={onClose} style={styles.dialog}>
         <View style={{ alignItems: 'center' }}>
-          <MyText poppins="Bold" fontSize={20} style={{ textAlign: 'center' }}>
+          <MyText
+            poppins="Bold"
+            fontSize={20}
+            style={{ verticalAlign: 'middle' }}
+          >
             Hi {user?.firstName || ''}
           </MyText>
           <Pressable
@@ -56,7 +60,7 @@ export const OrganizationModal = ({}: Props): JSX.Element => {
           <MyText
             poppins="Medium"
             fontSize={15}
-            style={{ width: '100%', textAlign: 'center' }}
+            style={{ width: '100%', verticalAlign: 'middle' }}
           >
             Start your journey on workcloud
           </MyText>
@@ -92,7 +96,7 @@ export const OrganizationModal = ({}: Props): JSX.Element => {
         </Dialog.Content>
         <Dialog.Actions style={{ justifyContent: 'center' }}>
           <Button
-            labelStyle={{ textAlign: 'center', fontFamily: 'PoppinsBold' }}
+            labelStyle={{ verticalAlign: 'middle', fontFamily: 'PoppinsBold' }}
             onPress={onClose}
             textColor="blue"
           >

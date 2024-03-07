@@ -121,7 +121,7 @@ const Representatives = () => {
         source={{ uri: 'https://via.placeholder.com/48x48' }}
         style={{ width: 48, height: 48, borderRadius: 9999 }}
       />
-      <MyText poppins="Bold" fontSize={10} style={{ textAlign: 'center' }}>
+      <MyText poppins="Bold" fontSize={10} style={{ verticalAlign: 'middle' }}>
         {data.role}
       </MyText>
       <View

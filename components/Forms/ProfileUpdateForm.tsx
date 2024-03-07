@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 9999,
     lineHeight: 20,
-    textAlign: 'center',
+    verticalAlign: 'middle',
     position: 'absolute',
     bottom: 2,
     right: -2,

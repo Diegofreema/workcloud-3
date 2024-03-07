@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useProfile } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
+import { useCreateProfile } from '@/lib/mutations';
 
 const API_KEY = 'cnvc46pm8uq9';
 
@@ -19,13 +20,14 @@ export default function AppLayout() {
   const { userId } = useAuth();
   const { data, error, isPending, refetch, isRefetching, isPaused } =
     useProfile(userId);
-  console.log(data);
+  const { mutateAsync } = useCreateProfile();
 
   useEffect(() => {
     if (!data) return;
 
     const user = data.profile[0];
     const connectUser = async () => {
+      mutateAsync();
       await client.connectUser(
         {
           id: user?.user_id,

@@ -89,7 +89,7 @@ const AllStaffs = (props: Props) => {
           <MyText
             poppins="Bold"
             fontSize={20}
-            style={{ textAlign: 'center', marginBottom: 20 }}
+            style={{ marginBottom: 20, verticalAlign: 'middle' }}
           >
             No staffs found
           </MyText>
