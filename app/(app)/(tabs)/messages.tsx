@@ -4,29 +4,27 @@ import { useDarkMode } from '../../../hooks/useDarkMode';
 import { useRouter } from 'expo-router';
 import { TextComponents } from '../../../components/TextComponents';
 import { defaultStyle } from '../../../constants/index';
+import { ChannelList } from 'stream-chat-expo';
+import { MyText } from '@/components/Ui/MyText';
+import { useAuth } from '@clerk/clerk-expo';
+import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 
 type Props = {};
 const messageArray = Array.from({ length: 10 }, (_, i) => i + 1);
 const messages = (props: Props) => {
   const { darkMode } = useDarkMode();
+  const { userId } = useAuth();
   const router = useRouter();
+  const onSelect = (id: any) => {
+    router.push(`/chat/${id}`);
+  };
+  if (!userId) return <LoadingComponent />;
   return (
     <View style={{ flex: 1, ...defaultStyle }}>
-      {/* <Text
-        style={{
-          fontSize: 20,
-          fontWeight: 'bold',
-          color: darkMode ? 'white' : 'black',
-        }}
-      >
-        No messages yet
-      </Text> */}
-
-      <FlatList
-        data={messageArray}
-        renderItem={({ item }) => <TextComponents />}
-        keyExtractor={(item) => item.toString()}
-        showsVerticalScrollIndicator={false}
+      <ChannelList
+        filters={{ members: { $in: [userId] } }}
+        onSelect={(channel) => onSelect(channel.id)}
+        EmptyStateIndicator={EmptyComponent}
       />
     </View>
   );
@@ -35,3 +33,13 @@ const messages = (props: Props) => {
 export default messages;
 
 const styles = StyleSheet.create({});
+
+const EmptyComponent = () => {
+  return (
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <MyText poppins="Bold" fontSize={20}>
+        No messages yet
+      </MyText>
+    </View>
+  );
+};

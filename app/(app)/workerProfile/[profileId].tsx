@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import React from 'react';
 import { HStack, ScrollView, VStack } from '@gluestack-ui/themed';
 import { HeaderNav } from '@/components/HeaderNav';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -16,15 +16,18 @@ import {
   SimpleLineIcons,
 } from '@expo/vector-icons';
 import { MyText } from '@/components/Ui/MyText';
-import { format, formatDistance, formatRelative, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import Toast from 'react-native-toast-message';
 import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
+import { useChatContext } from 'stream-chat-expo';
+import { useAuth } from '@clerk/clerk-expo';
 type Props = {};
 
 const Profile = (props: Props) => {
   const { profileId } = useLocalSearchParams<{ profileId: string }>();
-  const [requestPending, setRequestPending] = useState(false);
+  const { client } = useChatContext();
+  const { userId: me } = useAuth();
   const router = useRouter();
   const {
     data,
@@ -67,6 +70,20 @@ const Profile = (props: Props) => {
   const requestToCancel = pendingData?.requests?.find(
     (worker) => worker.workerId === +profileId
   );
+  const idToChat = data.worker[0].userId;
+  const startChannel = async () => {
+    const channel = client.channel('messaging', {
+      members: [
+        'user_2dKoMMHhxMurWNBkrlJS6vh0nYP',
+        'user_2YMBF0tcAqO28M5V4z9hRjaJ3Nk',
+      ],
+    });
+
+    await channel.watch();
+
+    router.push(`/chat/${channel.id}`);
+  };
+  console.log(idToChat, me);
 
   const formattedSkills = (text: string) => {
     if (text.includes(',')) {
@@ -130,7 +147,7 @@ const Profile = (props: Props) => {
           {isInPending ? 'Cancel Request' : 'Send Request'}
         </MyButton>
         <MyButton
-          onPress={sendMessage}
+          onPress={startChannel}
           buttonColor={colors.lightBlueButton}
           textColor={colors.dialPad}
           style={{ borderRadius: 8, height: 45 }}

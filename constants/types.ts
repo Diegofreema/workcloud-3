@@ -34,6 +34,8 @@ export type Profile = {
   phone: string;
   gender: string;
   user_id: string;
+  streamToken: string;
+  boarded: boolean;
 };
 
 export type Wks = {

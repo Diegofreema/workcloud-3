@@ -27,6 +27,7 @@ export const useFollowers = () => {
     queryFn: async () => getFollowers(),
   });
 };
+
 export const usePersonalOrgs = () => {
   const { userId } = useAuth();
   const getOrgs = async () => {

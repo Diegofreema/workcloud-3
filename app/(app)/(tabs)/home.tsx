@@ -3,7 +3,7 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { router, useFocusEffect, useRouter } from 'expo-router';
 import { defaultStyle, fontFamily } from '../../../constants';
 import { Header } from '../../../components/Header';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth, useUser } from '@clerk/clerk-expo';
 import { ProfileHeader } from '../../../components/ProfileHeader';
 import { colors } from '../../../constants/Colors';
 import {
@@ -23,13 +23,18 @@ import { VStack } from '@gluestack-ui/themed';
 import { MyText } from '../../../components/Ui/MyText';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
+import { generateToken } from '@/generateToken';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function TabOneScreen() {
   const router = useRouter();
   const { isLoaded, userId, isSignedIn } = useAuth();
+  const queryClient = useQueryClient();
+  const { user } = useUser();
   if (!isLoaded) {
     return;
   }
+
   const {
     data: orgs,
     isPending: isPendingOrgs,
@@ -76,6 +81,13 @@ export default function TabOneScreen() {
     refetchWorker();
     refetch();
   };
+  useEffect(() => {
+    if (isLoaded && user) {
+      generateToken(user);
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    }
+  }, [isLoaded, user]);
+
   const isRefetching =
     isRefetchingOrgs || isRefetchingWorker || isRefetchingFollowers;
   if (isPending || isPendingOrgs || isPendingWorker) {
@@ -92,8 +104,6 @@ export default function TabOneScreen() {
   ) {
     return <ErrorComponent refetch={refetchData} />;
   }
-
-  console.log(worker);
 
   return (
     <View style={[defaultStyle, styles.container]}>

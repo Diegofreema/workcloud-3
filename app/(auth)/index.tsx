@@ -1,6 +1,6 @@
 import React from 'react';
 import * as WebBrowser from 'expo-web-browser';
-import { useAuth, useOAuth } from '@clerk/clerk-expo';
+import { useAuth, useOAuth, useUser } from '@clerk/clerk-expo';
 import { useWarmUpBrowser } from '../../hooks/warmUpBrowser';
 import { Button, Text } from 'react-native-paper';
 import { useRouter } from 'expo-router';
@@ -8,13 +8,14 @@ import { colors } from '../../constants/Colors';
 import { AuthTitle } from '../../components/AuthTitle';
 import { View } from 'react-native';
 import { useDarkMode } from '../../hooks/useDarkMode';
-import { supabase } from '../../lib/supabase';
+
 import { Container } from '@/components/Ui/Container';
 WebBrowser.maybeCompleteAuthSession();
 
 const SignInWithOAuth = () => {
   const { darkMode } = useDarkMode();
   const { userId } = useAuth();
+  const { user } = useUser();
   useWarmUpBrowser();
   const router = useRouter();
   const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
