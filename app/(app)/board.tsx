@@ -119,7 +119,7 @@ const signup = (props: Props) => {
             .toUpperCase()} your  profile was created`,
         });
 
-        router.push('/(tabs)');
+        router.push('/(app)/(tabs)/home');
       }
 
       if (error) {

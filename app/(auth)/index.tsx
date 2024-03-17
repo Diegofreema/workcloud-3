@@ -3,21 +3,47 @@ import * as WebBrowser from 'expo-web-browser';
 import { useAuth, useOAuth, useUser } from '@clerk/clerk-expo';
 import { useWarmUpBrowser } from '../../hooks/warmUpBrowser';
 import { Button, Text } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { colors } from '../../constants/Colors';
 import { AuthTitle } from '../../components/AuthTitle';
 import { View } from 'react-native';
 import { useDarkMode } from '../../hooks/useDarkMode';
 
 import { Container } from '@/components/Ui/Container';
+import axios from 'axios';
+import { useQueryClient } from '@tanstack/react-query';
+import { useData } from '@/hooks/useData';
 WebBrowser.maybeCompleteAuthSession();
 
 const SignInWithOAuth = () => {
   const { darkMode } = useDarkMode();
-  const { userId } = useAuth();
   const { user } = useUser();
+  const queryClient = useQueryClient();
+  const { getUserData } = useData();
+
+  console.log('🚀 ~ SignInWithOAuth ~ user:', user);
   useWarmUpBrowser();
   const router = useRouter();
+
+  const createProfile = async () => {
+    try {
+      const { data } = await axios.post(
+        'https://server-zeta-blush.vercel.app/create-profile',
+        {
+          email: user?.emailAddresses[0].emailAddress,
+          name: user?.fullName,
+          avatarUrl: user?.imageUrl,
+          user_id: user?.id,
+        }
+      );
+      getUserData(data);
+
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
 
   const onPress = async () => {
@@ -25,7 +51,10 @@ const SignInWithOAuth = () => {
       const { createdSessionId, setActive } = await startOAuthFlow();
 
       if (createdSessionId) {
+        console.log('🚀 ~ onPress ~ createdSessionId:', createdSessionId);
         setActive!({ session: createdSessionId });
+        createProfile();
+        return router.replace('/home');
       }
     } catch (err) {
       console.error('OAuth error', err);

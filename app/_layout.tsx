@@ -6,6 +6,7 @@ import {
 } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import {
+  Redirect,
   Slot,
   Stack,
   useNavigation,
@@ -26,6 +27,7 @@ import { useDarkMode } from '@/hooks/useDarkMode';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ClerkProvider, SignedIn, SignedOut, useAuth } from '@clerk/clerk-expo';
 import { StatusBar } from 'expo-status-bar';
+import { PermissionsAndroid, Platform } from 'react-native';
 
 const ClerkKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 const tokenCache = {
@@ -94,7 +96,17 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
-
+  useEffect(() => {
+    const run = async () => {
+      if (Platform.OS === 'android') {
+        await PermissionsAndroid.requestMultiple([
+          'android.permission.POST_NOTIFICATIONS',
+          'android.permission.BLUETOOTH_CONNECT',
+        ]);
+      }
+    };
+    run();
+  }, []);
   if (!loaded) {
     return null;
   }
@@ -115,31 +127,6 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { darkMode } = useDarkMode();
-  const segment = useSegments();
-  const rootNavigation = useNavigation();
-  const [isReady, setIsReady] = useState(false);
-  const { isLoaded, isSignedIn } = useAuth();
-  const router = useRouter();
-  useEffect(() => {
-    const unsubscribe = rootNavigation?.addListener('state', () => {
-      setIsReady(true);
-    });
-
-    return () => unsubscribe && unsubscribe();
-  }, [rootNavigation]);
-
-  useEffect(() => {
-    if (!isReady || !isLoaded) {
-      return;
-    }
-    const isAuthGroup = segment[0] === '(auth)';
-
-    if (isLoaded && !isSignedIn && !isAuthGroup) {
-      router.replace('/');
-    } else if (isSignedIn && isAuthGroup) {
-      router.replace('/home');
-    }
-  }, [isLoaded, isSignedIn, segment, isReady]);
 
   return (
     <ThemeProvider value={darkMode ? DarkTheme : DefaultTheme}>
@@ -149,16 +136,7 @@ function RootLayoutNav() {
           flex: 1,
         }}
       >
-        <SignedIn>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(app)" />
-          </Stack>
-        </SignedIn>
-        <SignedOut>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)/index" />
-          </Stack>
-        </SignedOut>
+        <Slot initialRouteName="(app)" />
       </SafeAreaView>
     </ThemeProvider>
   );

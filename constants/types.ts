@@ -26,16 +26,16 @@ export type Organization = {
 };
 
 export type Profile = {
-  id: number;
-  name: string;
+  name: string | null;
   avatarUrl: string;
-  date_of_birth: string;
   email: string;
-  phone: string;
-  gender: string;
   user_id: string;
-  streamToken: string;
-  boarded: boolean;
+  id?: number;
+  phone?: string;
+  date_of_birth?: string;
+  gender?: string;
+  streamToken?: string;
+  boarded?: boolean;
 };
 
 export type Wks = {
@@ -74,4 +74,14 @@ export type Requests = {
   status: string;
   workerId: number;
   workers: Workers;
+};
+
+export type Person = {
+  user: {
+    email: string;
+    name: string;
+    avatarUrl: string;
+    user_id: string;
+    streamToken: string;
+  };
 };

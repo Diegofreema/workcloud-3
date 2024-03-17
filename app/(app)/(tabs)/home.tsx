@@ -11,8 +11,8 @@ import {
   usePersonalOrgs,
   useWorkers,
 } from '../../../lib/queries';
-import { ActivityIndicator, Button, Text } from 'react-native-paper';
-import { useContext, useCallback, useEffect, useLayoutEffect } from 'react';
+import { Text } from 'react-native-paper';
+import { useCallback } from 'react';
 import { useDarkMode } from '../../../hooks/useDarkMode';
 import { useOrganizationModal } from '../../../hooks/useOrganizationModal';
 import { OrganizationModal } from '../../../components/OrganizationModal';
@@ -23,13 +23,14 @@ import { VStack } from '@gluestack-ui/themed';
 import { MyText } from '../../../components/Ui/MyText';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
-import { generateToken } from '@/generateToken';
 import { useQueryClient } from '@tanstack/react-query';
+import { useCreateProfile } from '@/lib/mutations';
 
 export default function TabOneScreen() {
   const router = useRouter();
   const { isLoaded, userId, isSignedIn } = useAuth();
   const queryClient = useQueryClient();
+  const { mutateAsync } = useCreateProfile();
   const { user } = useUser();
   if (!isLoaded) {
     return;
@@ -81,13 +82,6 @@ export default function TabOneScreen() {
     refetchWorker();
     refetch();
   };
-  useEffect(() => {
-    if (isLoaded && user) {
-      generateToken(user);
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-    }
-  }, [isLoaded, user]);
-
   const isRefetching =
     isRefetchingOrgs || isRefetchingWorker || isRefetchingFollowers;
   if (isPending || isPendingOrgs || isPendingWorker) {

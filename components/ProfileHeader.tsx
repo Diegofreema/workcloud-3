@@ -14,7 +14,7 @@ export const ProfileHeader = ({ id }: Props): JSX.Element | undefined => {
   const router = useRouter();
   if (isLoaded && !user?.id) return;
   return (
-    <Link asChild href={`/(myProfile)/${id}`}>
+    <Link asChild href={`/(app)/(myProfile)/${id}`}>
       <Pressable
         style={{
           marginTop: 10,

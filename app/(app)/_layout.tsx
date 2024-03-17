@@ -1,61 +1,77 @@
-import { Stack } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StreamChat } from 'stream-chat';
-import { Chat, OverlayProvider } from 'stream-chat-expo';
+import { Chat, DeepPartial, OverlayProvider, Theme } from 'stream-chat-expo';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useProfile } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { useCreateProfile } from '@/lib/mutations';
+import { useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import { Person } from '@/constants/types';
+import { useData } from '@/hooks/useData';
 
-const API_KEY = 'cnvc46pm8uq9';
-
-const client = StreamChat.getInstance(
-  API_KEY,
-  '4e4zqvk5ntasfevbnegfj2gn4yuf7sbsayutarfufrpcbgx8s7nenb84ns64jbgt'
-);
+const client = StreamChat.getInstance('cnvc46pm8uq9');
 
 export default function AppLayout() {
-  const { userId } = useAuth();
+  const { isLoaded, userId, isSignedIn } = useAuth();
+  const { userData } = useData();
+  console.log('🚀 ~ AppLayout ~ userData:', userData);
+
   const { data, error, isPending, refetch, isRefetching, isPaused } =
     useProfile(userId);
-  const { mutateAsync } = useCreateProfile();
 
-  useEffect(() => {
-    if (!data) return;
+  // useEffect(() => {
+  //   if (person?.user) {
+  //     const connectUser = async () => {
+  //       try {
+  //         console.log(person);
+  //         await client.connectUser(
+  //           {
+  //             id: person?.user.user_id as string,
+  //             name: person?.user.name as any,
+  //             image: person?.user.avatarUrl,
+  //           },
+  //           person?.user.streamToken
+  //         );
+  //       } catch (error) {
+  //         console.log(error);
+  //       }
+  //     };
 
-    const user = data.profile[0];
-    const connectUser = async () => {
-      mutateAsync();
-      await client.connectUser(
-        {
-          id: user?.user_id,
-          name: user?.name,
-          image: user?.avatarUrl,
-        },
-        user?.streamToken
-      );
-    };
+  //     connectUser();
 
-    connectUser();
-
-    return () => {
-      client.disconnectUser();
-    };
-  }, [data]);
+  //     return () => {
+  //       client.disconnectUser();
+  //       console.log('User disconnected');
+  //     };
+  //   }
+  // }, [person?.user]);
 
   if (error || isPaused) {
     return <ErrorComponent refetch={refetch} />;
   }
 
-  if (isPending) {
+  if (isPending || !isLoaded) {
     return <LoadingComponent />;
   }
 
+  if (isLoaded && !isSignedIn) {
+    return <Redirect href="/login" />;
+  }
+
+  const chatTheme: DeepPartial<Theme> = {
+    channelPreview: {
+      container: {
+        backgroundColor: 'transparent',
+      },
+    },
+  };
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <OverlayProvider>
+      <OverlayProvider value={{ style: chatTheme }}>
         <Chat client={client}>
           <Stack
             screenOptions={{ headerShown: false }}

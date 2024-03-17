@@ -24,8 +24,8 @@ export const BottomCard = ({}: Props): JSX.Element => {
     router.push('/settings');
   };
 
-  const logout = async () => {
-    await signOut();
+  const logout = () => {
+    signOut();
   };
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
