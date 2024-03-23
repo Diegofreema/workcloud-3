@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import {
+  Org,
   Organization,
+  Person,
   Profile,
   Requests,
   Wks,
@@ -9,7 +11,8 @@ import {
   connections,
 } from '../constants/types';
 import { useAuth } from '@clerk/clerk-expo';
-
+import axios from 'axios';
+const api = process.env.EXPO_PUBLIC_BACKEND_API!;
 export const useFollowers = () => {
   const getFollowers = async () => {
     const { data, error } = await supabase
@@ -28,21 +31,30 @@ export const useFollowers = () => {
   });
 };
 
-export const usePersonalOrgs = () => {
-  const { userId } = useAuth();
+export const usePersonalOrgs = (id: string) => {
   const getOrgs = async () => {
-    const { data, error } = await supabase
-      .from('workspace')
-      .select()
-      .eq('owner_id', userId);
+    const { data } = await axios.get(
+      `http://192.168.240.212:3000/organization/${id}`
+    );
 
-    return {
-      orgs: data as Organization[],
-      error,
-    };
+    return data as Org;
   };
   return useQuery({
-    queryKey: ['organizations'],
+    queryKey: ['organization'],
+    queryFn: async () => getOrgs(),
+  });
+};
+
+export const useOtherOrgs = (id: string) => {
+  const getOrgs = async () => {
+    const { data } = await axios.get(
+      `http://192.168.240.212:3000/organization/other/${id}`
+    );
+
+    return data as Org[];
+  };
+  return useQuery({
+    queryKey: ['organizationOther'],
     queryFn: async () => getOrgs(),
   });
 };
@@ -65,34 +77,12 @@ export const useAssignedOrgs = () => {
   });
 };
 
-export const useGetSingleOrg = (id: any) => {
-  const getOrgs = async () => {
-    const { data, error } = await supabase
-      .from('workspace')
-      .select()
-      .eq('id', id);
-
-    return {
-      orgs: data as Organization[],
-      error,
-    };
-  };
-  return useQuery({
-    queryKey: ['organizations'],
-    queryFn: async () => getOrgs(),
-  });
-};
 export const useProfile = (id: any) => {
   const getProfile = async () => {
-    const { data, error } = await supabase
-      .from('profile')
-      .select()
-      .eq('user_id', id);
-
-    return {
-      profile: data as Profile[],
-      error,
-    };
+    const { data } = await axios.get(
+      `http://192.168.240.212:3000/auth/profile/${id}`
+    );
+    return data as Person;
   };
   return useQuery({
     queryKey: ['profile'],

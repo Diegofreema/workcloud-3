@@ -18,16 +18,19 @@ import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { HStack } from '@gluestack-ui/themed';
 import { Image } from 'expo-image';
 import { colors } from '@/constants/Colors';
+import { useData } from '@/hooks/useData';
 
 type Props = {};
 
 const messages = (props: Props) => {
-  const { userId } = useAuth();
+  const { id: userId } = useData();
   const router = useRouter();
   const onSelect = (id: any) => {
     router.push(`/chat/${id}`);
   };
-  if (!userId) return <LoadingComponent />;
+
+  console.log(userId);
+
   return (
     <View style={{ flex: 1, ...defaultStyle, backgroundColor: 'white' }}>
       <ChannelList

@@ -12,7 +12,11 @@ export const Subtitle = ({ children }: Props): JSX.Element => {
   const { darkMode } = useDarkMode();
   return (
     <Text
-      style={{ color: darkMode ? 'white' : colors.textGray, marginTop: 10 }}
+      style={{
+        color: darkMode ? 'white' : colors.textGray,
+        marginTop: 10,
+        fontFamily: 'PoppinsLight',
+      }}
     >
       {children}
     </Text>

@@ -1,34 +1,25 @@
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  Image as RNImage,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useGetSingleOrg, useGetWks, useProfile } from '../../../lib/queries';
+import { usePersonalOrgs } from '../../../lib/queries';
 import { useDarkMode } from '../../../hooks/useDarkMode';
-import { AuthHeader } from '../../../components/AuthHeader';
-import { Image } from 'expo-image';
-import { Button } from 'react-native-paper';
 import { colors } from '../../../constants/Colors';
-import dateFormat from 'dateformat';
 import { EvilIcons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
-import { useAuth } from '@clerk/clerk-expo';
-import MyLoader from '../../../components/MyLoader';
-import { WorkspaceDetails } from '../../../components/WorkspaceDetails';
-import { format, sub } from 'date-fns';
 import { ErrorComponent } from '../../../components/Ui/ErrorComponent';
 
-import { CreateWorkspaceModal } from '../../../components/Dialogs/CreateWorkspace';
 import { useCreate } from '../../../hooks/useCreate';
-import { SelectRow } from '../../../components/Dialogs/SelectRow';
 import { LoadingComponent } from '../../../components/Ui/LoadingComponent';
+import { useData } from '@/hooks/useData';
+import { CreateWorkspaceModal } from '@/components/Dialogs/CreateWorkspace';
+import { SelectRow } from '@/components/Dialogs/SelectRow';
 import { DeleteWksSpaceModal } from '@/components/Dialogs/DeleteWks';
+import { AuthHeader } from '@/components/AuthHeader';
+import { Image } from 'expo-image';
+import { WorkspaceDetails } from '@/components/WorkspaceDetails';
+import { Button } from 'react-native-paper';
+import { format } from 'date-fns';
 
 type Props = {};
 type SubProps = {
@@ -118,61 +109,35 @@ export const OrganizationItems = ({ name, text, website }: SubProps) => {
   );
 };
 const OrganizationDetails = (props: Props) => {
-  const { organizationId } = useLocalSearchParams();
+  const { id } = useData();
+  const { organizationId } = useLocalSearchParams<{ organizationId: string }>();
   const { onOpen } = useCreate();
   const { darkMode } = useDarkMode();
   const router = useRouter();
-  const { userId } = useAuth();
-  const { data, isFetching, isLoading, isPending, error, refetch, isPaused } =
-    useGetSingleOrg(organizationId);
-  const {
-    data: profileData,
-    isFetching: profileIsFetching,
-    isLoading: profileIsLoading,
-  } = useProfile(data?.orgs[0]?.owner_id);
-  const organization = data?.orgs[0];
 
-  const {
-    data: workspaceData,
-    error: workspaceError,
-    isPaused: workspaceIsPaused,
-    isPending: workspaceIsPending,
-    refetch: workspaceRefetch,
-  } = useGetWks(userId);
-  if (isPending || workspaceIsPending) {
+  const { data, isPending, error, refetch, isPaused } = usePersonalOrgs(id);
+
+  if (isPending) {
     return <LoadingComponent />;
   }
 
   const handleRefetch = () => {
     refetch();
-    workspaceRefetch();
   };
 
-  if (error || data.error || isPaused || workspaceError || workspaceIsPaused) {
+  if (error || isPaused) {
     return <ErrorComponent refetch={handleRefetch} />;
   }
-  if (
-    isLoading ||
-    isFetching ||
-    isPending ||
-    profileIsFetching ||
-    profileIsLoading
-  ) {
+  if (isPending) {
     return <LoadingComponent />;
   }
 
-  if (error || profileData?.error) {
-    return <ErrorComponent refetch={handleRefetch} />;
-  }
-
-  const formattedOpeningTime = new Date(organization?.opening_time as string);
-  const formattedClosingTime = new Date(organization?.closing_time as string);
-  const newCloseTime = sub(formattedClosingTime, { minutes: 15 });
-  const newOpeningTime = sub(formattedOpeningTime, { minutes: 15 });
+  const org = data;
+  console.log('🚀 ~ OrganizationDetails ~ org:', org);
 
   return (
     <>
-      <CreateWorkspaceModal wks={workspaceData?.wks} />
+      {/* <CreateWorkspaceModal wks={workspaceData} /> */}
       <SelectRow />
       <DeleteWksSpaceModal />
       <View style={{ flex: 1, paddingHorizontal: 20 }}>
@@ -195,7 +160,7 @@ const OrganizationDetails = (props: Props) => {
               <Image
                 style={{ width: 70, height: 70, borderRadius: 50 }}
                 contentFit="cover"
-                source={{ uri: organization?.image_url }}
+                source={{ uri: org?.avatar }}
               />
               <View>
                 <Text
@@ -206,7 +171,7 @@ const OrganizationDetails = (props: Props) => {
                     color: darkMode ? colors.white : colors.black,
                   }}
                 >
-                  {organization?.organization_name}
+                  {org?.organizationName}
                 </Text>
                 <Text
                   style={{
@@ -215,11 +180,11 @@ const OrganizationDetails = (props: Props) => {
                     color: darkMode ? colors.white : colors.black,
                   }}
                 >
-                  {profileData?.profile[0]?.name} | Admin
+                  {org?.ownerId?.name} | Admin
                 </Text>
               </View>
             </View>
-            {userId === organization?.owner_id && (
+            {id === org?.ownerId._id && (
               <Button
                 onPress={() =>
                   router.push(`/(app)/(organization)/edit/${organizationId}`)
@@ -248,7 +213,7 @@ const OrganizationDetails = (props: Props) => {
                 color: darkMode ? colors.white : colors.black,
               }}
             >
-              {organization?.description}
+              {org?.description}
             </Text>
             <View
               style={{
@@ -267,7 +232,7 @@ const OrganizationDetails = (props: Props) => {
                   textTransform: 'uppercase',
                 }}
               >
-                {organization?.work_days}
+                {org?.startDay} - {org?.endDay}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View
@@ -284,7 +249,7 @@ const OrganizationDetails = (props: Props) => {
                       fontSize: 10,
                     }}
                   >
-                    {format(newOpeningTime, 'hh:mm aaa')}
+                    {org?.startTime}
                   </Text>
                 </View>
                 <Text> — </Text>
@@ -303,7 +268,7 @@ const OrganizationDetails = (props: Props) => {
                       fontSize: 10,
                     }}
                   >
-                    {format(newCloseTime, 'hh:mm aaa')}
+                    {org?.endTime}
                   </Text>
                 </View>
               </View>
@@ -315,13 +280,9 @@ const OrganizationDetails = (props: Props) => {
               marginTop: 15,
             }}
           >
-            <OrganizationItems name="envelope" text={organization?.email} />
-            <OrganizationItems name="location" text={organization?.location} />
-            <OrganizationItems
-              name="link"
-              text={organization?.website}
-              website
-            />
+            <OrganizationItems name="envelope" text={org?.email} />
+            <OrganizationItems name="location" text={org?.location} />
+            <OrganizationItems name="link" text={org?.websiteUrl} website />
             <Text
               style={{
                 fontFamily: 'PoppinsBold',
@@ -329,7 +290,7 @@ const OrganizationDetails = (props: Props) => {
                 color: darkMode ? colors.white : colors.black,
               }}
             >
-              Members 0
+              Members {org?.followers?.length}
             </Text>
           </View>
           <View>
@@ -359,7 +320,7 @@ const OrganizationDetails = (props: Props) => {
             />
 
             <WorkspaceDetails
-              onPress={() => router.push(`/staffs/${organization?.id}`)}
+              onPress={() => router.push(`/staffs/${org?._id}`)}
               darkMode={darkMode}
               uri={require('../../../assets/images/staff.png')}
               name="Staffs"

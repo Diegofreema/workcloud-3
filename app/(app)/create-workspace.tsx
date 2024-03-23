@@ -1,16 +1,13 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import * as yup from 'yup';
 import RNPickerSelect from 'react-native-picker-select';
 import dateFormat from 'dateformat';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { FileObject } from '@supabase/storage-js';
 import * as ImagePicker from 'expo-image-picker';
-import { decode } from 'base64-arraybuffer';
-import * as FileSystem from 'expo-file-system';
 import { Button } from 'react-native-paper';
 import { useFormik } from 'formik';
-import { useUser } from '@clerk/clerk-expo';
 import Toast from 'react-native-toast-message';
 import { days, defaultStyle } from '../../constants';
 import { AuthHeader } from '../../components/AuthHeader';
@@ -20,20 +17,24 @@ import { colors } from '../../constants/Colors';
 import { Subtitle } from '../../components/Subtitle';
 import { InputComponent } from '../../components/InputComponent';
 import { supabase } from '../../lib/supabase';
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { useData } from '@/hooks/useData';
+import { createOrg } from '@/lib/helper';
 const validationSchema = yup.object().shape({
-  organization_name: yup.string().required('Name of organization is required'),
+  organizationName: yup.string().required('Name of organization is required'),
   category: yup.string().required('Category is required'),
   location: yup.string().required('Location is required'),
   description: yup.string().required('Description is required'),
   startDay: yup.string().required('Working days are required'),
   endDay: yup.string().required('Working days are required'),
-
-  website_url: yup.string().required('Website link is required'),
+  startTime: yup.string().required('Working time is required'),
+  endTime: yup.string().required('Working time is required'),
+  websiteUrl: yup.string().required('Website link is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
 });
 
@@ -42,12 +43,8 @@ type Props = {};
 const CreateWorkSpace = (props: Props) => {
   const [startTime, setStartTime] = useState(new Date(1598051730000));
   const [endTime, setEndTime] = useState(new Date(1598051730000));
-  const [imagePath, setImagePath] = useState('');
-  const [imageName, setImageName] = useState<ArrayBuffer>();
-  const [imageType, setImageType] = useState('');
-  const [image, setImage] = useState<string>('');
-  const { isLoaded, isSignedIn, user } = useUser();
-
+  const [avatar, setAvatar] = useState<string>('https://placehold.co/100x100');
+  const { id } = useData();
   const [show, setShow] = useState(false);
   const [show2, setShow2] = useState(false);
   const { darkMode } = useDarkMode();
@@ -55,158 +52,75 @@ const CreateWorkSpace = (props: Props) => {
   const [file, setFile] = useState<FileObject[]>([]);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    loadImage(imagePath);
-  }, [imagePath, imageName, imageType]);
-  const loadImage = async (filePath: any) => {
-    const { data } = supabase.storage
-      .from('organizations')
-      .getPublicUrl(`${imagePath}/${imageName}.${imageType}`);
-    const finalImageUrl = data.publicUrl.split('/').slice(0, -1).join('/');
-
-    setImage(finalImageUrl);
-  };
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      Toast.show({
-        type: 'error',
-        text1: 'Unauthorized',
-        text2: 'Please login to continue',
-      });
-      router.push('/login');
-      return;
-    }
-  }, []);
-
-  useEffect(() => {
-    const checkIfBoarded = async () => {
-      const { data, error } = await supabase
-        .from('profile')
-        .select('user_id')
-        .eq('user_id', user?.id);
-
-      if (isSignedIn && !data?.length) {
-        router.push('/board');
-        return Toast.show({
-          type: 'error',
-          text1: 'Unauthorized',
-          text2: 'Please complete your profile to continue',
-        });
-      }
-    };
-    checkIfBoarded();
-  }, []);
-
   const onSelectImage = async () => {
     const options: ImagePicker.ImagePickerOptions = {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
+      base64: true,
     };
 
     const result = await ImagePicker.launchImageLibraryAsync(options);
 
-    // Save image if not cancelled
     if (!result.canceled) {
-      const img = result.assets[0];
+      const base64 = `data:image/png;base64,${result.assets[0].base64}`;
+      console.log(base64);
 
-      const base64 = await FileSystem.readAsStringAsync(img.uri, {
-        encoding: 'base64',
-      });
-      const filePath = `${Math.random()}/${new Date().getTime()}.${
-        img.type === 'image' ? 'png' : 'mp4'
-      }`;
-      const contentType = img.type === 'image' ? 'image/png' : 'video/mp4';
-
-      const { error } = await supabase.storage
-        .from('organizations')
-        .upload(filePath, decode(base64), { contentType });
-      setImagePath(filePath);
-      setImageName(decode(base64));
-      setImageType(contentType);
-      loadImage(filePath);
-      if (error) {
-        console.log(error);
-      }
+      setAvatar(base64);
     }
   };
 
-  const onRemove = async () => {
-    const { data, error } = await supabase.storage
-      .from('organizations')
-      .remove([`${imagePath}/${imageName}.${imageType}`]);
-    setImage('');
-  };
   const {
     values,
     handleChange,
-    handleBlur,
+
     handleSubmit,
     isSubmitting,
     errors,
     touched,
     resetForm,
+    setValues,
   } = useFormik({
     initialValues: {
       email: '',
-      organization_name: '',
+      organizationName: '',
       category: '',
       startDay: '',
       endDay: '',
       description: '',
       location: '',
-      website_url: '',
+      websiteUrl: '',
+      startTime: '',
+      endTime: '',
     },
     validationSchema,
     onSubmit: async (values) => {
-      const {
-        email,
-        category,
-        endDay,
-        location,
-        organization_name,
-        startDay,
-        description,
-        website_url,
-      } = values;
-      if (!image.includes('png') && !image.includes('jpg')) {
-        return Toast.show({
-          type: 'error',
-          text1: 'Please upload an image',
+      // @ts-ignore
+      const data = await createOrg({ ...values, avatar, ownerId: id });
+      console.log('🚀 ~ onSubmit: ~ data:', data);
+      if (data?.orgsId as any) {
+        queryClient.invalidateQueries({
+          queryKey: ['organizations', 'organization'],
         });
-      }
-      const { error } = await supabase.from('workspace').insert({
-        organization_name: organization_name,
-        category,
-        description,
-        email,
-        closing_time: endTime,
-        work_days: `${startDay} - ${endDay}`,
-        website: website_url,
-        location,
-        opening_time: startTime,
-        owner_id: user?.id,
-        image_url: image.split('/').slice(0, -1).join('/'),
-      });
-
-      if (!error) {
+        resetForm();
         Toast.show({
           type: 'success',
           text1: 'Success',
-          text2: 'Organization created successfully',
+          text2: data?.message,
+          position: 'bottom',
         });
-        queryClient.invalidateQueries({ queryKey: ['organizations'] });
-        router.push('/workspace');
-        return;
+        // @ts-ignore
+        router.replace(`/(organization)/${data.orgsId}`);
       }
-      if (error) {
-        console.log(error);
 
-        return Toast.show({
+      if (data?.error) {
+        Toast.show({
           type: 'error',
-          text1: 'Error',
-          text2: error.message,
+          text1: 'Something went wrong',
+          text2: data.error,
+          position: 'bottom',
         });
       }
+      return;
     },
   });
 
@@ -215,9 +129,11 @@ const CreateWorkSpace = (props: Props) => {
     if (type === 'startTime') {
       setShow(false);
       setStartTime(currentDate);
+      setValues({ ...values, startTime: format(currentDate, 'HH:mm') });
     } else {
       setShow2(false);
       setEndTime(currentDate);
+      setValues({ ...values, endTime: format(currentDate, 'HH:mm') });
     }
   };
   const showMode = () => {
@@ -231,10 +147,10 @@ const CreateWorkSpace = (props: Props) => {
     category,
     endDay,
     location,
-    organization_name,
+    organizationName,
     startDay,
     description,
-    website_url,
+    websiteUrl,
   } = values;
   return (
     <ScrollView
@@ -250,84 +166,57 @@ const CreateWorkSpace = (props: Props) => {
       <View style={{ marginTop: 20, flex: 1 }}>
         <View style={{ flex: 0.6, gap: 10 }}>
           <Text
-            style={{ color: darkMode ? 'white' : 'black', fontWeight: 'bold' }}
+            style={{
+              color: darkMode ? 'white' : 'black',
+              fontFamily: 'PoppinsMedium',
+            }}
           >
             Organization image
           </Text>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            {image.includes('png') || image.includes('jpg') ? (
-              <View
+            <View
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: 50,
+              }}
+            >
+              <Image
+                contentFit="cover"
+                style={{ width: 100, height: 100, borderRadius: 50 }}
+                source={{ uri: avatar }}
+              />
+              <TouchableOpacity
                 style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 3,
+                  backgroundColor: darkMode ? 'white' : 'black',
+                  padding: 5,
+                  borderRadius: 30,
                 }}
+                onPress={onSelectImage}
               >
-                <Image
-                  contentFit="cover"
-                  style={{ width: 100, height: 100, borderRadius: 50 }}
-                  source={image.split('/').slice(0, -1).join('/')}
+                <FontAwesome
+                  name="plus"
+                  size={20}
+                  color={darkMode ? 'black' : 'white'}
                 />
-                <TouchableOpacity
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 3,
-                    backgroundColor: darkMode ? 'white' : 'black',
-                    padding: 5,
-                    borderRadius: 30,
-                  }}
-                  onPress={onRemove}
-                >
-                  <Ionicons
-                    name="trash-outline"
-                    size={20}
-                    color={darkMode ? 'black' : 'white'}
-                  />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
-
-                  backgroundColor: 'gray',
-                }}
-              >
-                <TouchableOpacity
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 3,
-                    backgroundColor: darkMode ? 'white' : 'black',
-                    padding: 5,
-                    borderRadius: 30,
-                  }}
-                  onPress={onSelectImage}
-                >
-                  <FontAwesome
-                    name="plus"
-                    size={20}
-                    color={darkMode ? 'black' : 'white'}
-                  />
-                </TouchableOpacity>
-              </View>
-            )}
+              </TouchableOpacity>
+            </View>
           </View>
 
           <>
             <InputComponent
               label="Organization Name"
-              value={organization_name}
-              onChangeText={handleChange('organization_name')}
+              value={organizationName}
+              onChangeText={handleChange('organizationName')}
               placeholder="Organization Name"
               keyboardType="default"
             />
-            {touched.organization_name && errors.organization_name && (
+            {touched.organizationName && errors.organizationName && (
               <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                {errors.organization_name}
+                {errors.organizationName}
               </Text>
             )}
           </>
@@ -377,14 +266,14 @@ const CreateWorkSpace = (props: Props) => {
           <>
             <InputComponent
               label="Website Link"
-              value={website_url}
-              onChangeText={handleChange('website_url')}
+              value={websiteUrl}
+              onChangeText={handleChange('websiteUrl')}
               placeholder="Website link"
               keyboardType="default"
             />
-            {touched.website_url && errors.website_url && (
+            {touched.websiteUrl && errors.websiteUrl && (
               <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                {errors.website_url}
+                {errors.websiteUrl}
               </Text>
             )}
           </>
@@ -397,13 +286,13 @@ const CreateWorkSpace = (props: Props) => {
               keyboardType="email-address"
             />
             {touched.email && errors.email && (
-              <Text style={{ color: 'red', fontWeight: 'bold' }}>
+              <Text style={{ color: 'red', fontFamily: 'PoppinsMedium' }}>
                 {errors.email}
               </Text>
             )}
           </>
           <>
-            <Text style={{ marginBottom: 5, fontWeight: 'bold' }}>
+            <Text style={{ marginBottom: 5, fontFamily: 'PoppinsMedium' }}>
               Work Days
             </Text>
             <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -440,7 +329,7 @@ const CreateWorkSpace = (props: Props) => {
             </View>
           </>
           <>
-            <Text style={{ marginBottom: 5, fontWeight: 'bold' }}>
+            <Text style={{ marginBottom: 5, fontFamily: 'PoppinsMedium' }}>
               Opening And Closing Time
             </Text>
             <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -448,16 +337,14 @@ const CreateWorkSpace = (props: Props) => {
                 <Pressable onPress={showMode} style={styles2.border}>
                   <Text>
                     {' '}
-                    {`${
-                      dateFormat(startTime, 'HH:MM') || ' Opening Time'
-                    }`}{' '}
+                    {`${format(startTime, 'HH:mm') || ' Opening Time'}`}{' '}
                   </Text>
                 </Pressable>
-                {/* {touched.date && errors.date && (
-              <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                {errors.date}
-              </Text>
-            )} */}
+                {errors.startTime && (
+                  <Text style={{ color: 'red', fontWeight: 'bold' }}>
+                    {errors.startTime}
+                  </Text>
+                )}
 
                 {show && (
                   <DateTimePicker
@@ -478,11 +365,11 @@ const CreateWorkSpace = (props: Props) => {
                     {`${dateFormat(endTime, 'HH:MM') || ' Closing Time'}`}{' '}
                   </Text>
                 </Pressable>
-                {/* {touched.date && errors.date && (
-              <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                {errors.date}
-              </Text>
-            )} */}
+                {errors.endTime && (
+                  <Text style={{ color: 'red', fontWeight: 'bold' }}>
+                    {errors.endTime}
+                  </Text>
+                )}
                 {show2 && (
                   <DateTimePicker
                     testID="dateTimePicker"

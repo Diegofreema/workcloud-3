@@ -9,6 +9,7 @@ import { colors } from '../../../constants/Colors';
 import {
   useFollowers,
   usePersonalOrgs,
+  useProfile,
   useWorkers,
 } from '../../../lib/queries';
 import { Text } from 'react-native-paper';
@@ -25,103 +26,57 @@ import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCreateProfile } from '@/lib/mutations';
+import { useData } from '@/hooks/useData';
 
 export default function TabOneScreen() {
   const router = useRouter();
-  const { isLoaded, userId, isSignedIn } = useAuth();
+  const { user: profile, id } = useData();
+  console.log('🚀 ~ TabOneScreen ~ id:', id);
+
   const queryClient = useQueryClient();
-  const { mutateAsync } = useCreateProfile();
-  const { user } = useUser();
-  if (!isLoaded) {
-    return;
+  const { data, refetch, isPaused, isPending, isError, isRefetching } =
+    useProfile(profile?.id as string);
+  const { onOpen } = useOrganizationModal();
+  if (isError || isPaused) {
+    return <ErrorComponent refetch={refetch} />;
   }
 
-  const {
-    data: orgs,
-    isPending: isPendingOrgs,
-    isPaused,
-    isError,
-    refetch,
-    isRefetching: isRefetchingOrgs,
-  } = usePersonalOrgs();
-  const {
-    data: worker,
-    isPending: isPendingWorker,
-    isPaused: isPausedWorker,
-    isError: isErrorWorker,
-    refetch: refetchWorker,
-    isRefetching: isRefetchingWorker,
-  } = useWorkers();
-
-  const { onOpen } = useOrganizationModal();
-  const isNotAWorker = worker?.worker?.length === 0;
-  useFocusEffect(
-    useCallback(() => {
-      if (
-        isSignedIn &&
-        orgs?.orgs?.length === 0 &&
-        isSignedIn &&
-        isNotAWorker
-      ) {
-        onOpen();
-      }
-    }, [])
-  );
-  const {
-    data,
-
-    isPaused: isPausedFollowers,
-    error,
-    isPending,
-    refetch: refetchFollowers,
-    isRefetching: isRefetchingFollowers,
-  } = useFollowers();
-  const { darkMode } = useDarkMode();
-  const refetchData = () => {
-    refetchFollowers();
-    refetchWorker();
-    refetch();
-  };
-  const isRefetching =
-    isRefetchingOrgs || isRefetchingWorker || isRefetchingFollowers;
-  if (isPending || isPendingOrgs || isPendingWorker) {
+  if (isPending) {
     return <LoadingComponent />;
   }
 
-  if (
-    error ||
-    isError ||
-    isErrorWorker ||
-    isPaused ||
-    isPausedWorker ||
-    isPausedFollowers
-  ) {
-    return <ErrorComponent refetch={refetchData} />;
-  }
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     if (
+  //       isSignedIn &&
+  //       orgs?.orgs?.length === 0 &&
+  //       isSignedIn &&
+  //       isNotAWorker
+  //     ) {
+  //       onOpen();
+  //     }
+  //   }, [])
+  // );
+
+  const { user } = data;
 
   return (
     <View style={[defaultStyle, styles.container]}>
       <OrganizationModal />
       <Header />
-      {isSignedIn && <ProfileHeader id={userId} />}
-      {isSignedIn ? (
-        <View style={{ marginVertical: 10 }}>
-          <HeadingText link="/connections" />
-        </View>
-      ) : (
-        <Text
-          style={{
-            color: darkMode ? 'white' : 'black',
-            fontFamily: 'PoppinsBold',
-            marginBottom: 10,
-          }}
-        >
-          Login in to see your connections
-        </Text>
-      )}
+      <ProfileHeader
+        id={user.id}
+        avatar={user.avatarUrl}
+        name={user.name}
+        email={user.email}
+      />
+
+      <View style={{ marginVertical: 10 }}>
+        <HeadingText link="/connections" />
+      </View>
 
       <FlatList
-        onRefresh={refetchData}
+        onRefresh={refetch}
         refreshing={isRefetching}
         contentContainerStyle={{
           gap: 15,
@@ -143,7 +98,7 @@ export default function TabOneScreen() {
               style={{
                 fontFamily: fontFamily.Bold,
                 marginTop: 30,
-                color: darkMode ? 'white' : 'black',
+                color: 'black',
               }}
             >
               {'No connections yet'}

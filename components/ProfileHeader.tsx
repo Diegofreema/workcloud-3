@@ -1,20 +1,13 @@
-import { useUser } from '@clerk/clerk-expo';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import { Text } from 'react-native-paper';
-import { useDarkMode } from '../hooks/useDarkMode';
-type Props = {
-  id: string | null;
-};
 
-export const ProfileHeader = ({ id }: Props): JSX.Element | undefined => {
-  const { user, isLoaded } = useUser();
-  const { darkMode } = useDarkMode();
-  const router = useRouter();
-  if (isLoaded && !user?.id) return;
+import { PartialUser } from '../hooks/useData';
+
+export const ProfileHeader = (user: PartialUser): JSX.Element | undefined => {
   return (
-    <Link asChild href={`/(app)/(myProfile)/${id}`}>
+    <Link asChild href={`/(app)/(myProfile)/${user?.id}`}>
       <Pressable
         style={{
           marginTop: 10,
@@ -23,21 +16,17 @@ export const ProfileHeader = ({ id }: Props): JSX.Element | undefined => {
           gap: 10,
         }}
       >
-        <Image
-          style={styles.image}
-          source={user?.imageUrl}
-          contentFit="cover"
-        />
+        <Image style={styles.image} source={user?.avatar} contentFit="cover" />
         <View>
           <Text
             variant="titleSmall"
             style={{
               fontFamily: 'PoppinsBold',
               fontSize: 17,
-              color: darkMode ? 'white' : 'black',
+              color: 'black',
             }}
           >
-            Hi {user?.firstName}
+            Hi {user?.name}
           </Text>
           <Text
             style={{

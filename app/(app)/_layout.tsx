@@ -16,51 +16,35 @@ import { useData } from '@/hooks/useData';
 const client = StreamChat.getInstance('cnvc46pm8uq9');
 
 export default function AppLayout() {
-  const { isLoaded, userId, isSignedIn } = useAuth();
-  const { userData } = useData();
-  console.log('🚀 ~ AppLayout ~ userData:', userData);
+  const { user } = useData();
 
-  const { data, error, isPending, refetch, isRefetching, isPaused } =
-    useProfile(userId);
+  useEffect(() => {
+    console.log('Use effect working');
 
-  // useEffect(() => {
-  //   if (person?.user) {
-  //     const connectUser = async () => {
-  //       try {
-  //         console.log(person);
-  //         await client.connectUser(
-  //           {
-  //             id: person?.user.user_id as string,
-  //             name: person?.user.name as any,
-  //             image: person?.user.avatarUrl,
-  //           },
-  //           person?.user.streamToken
-  //         );
-  //       } catch (error) {
-  //         console.log(error);
-  //       }
-  //     };
+    const connectUser = async () => {
+      try {
+        console.log('Connected to stream 1');
 
-  //     connectUser();
+        await client.connectUser(
+          {
+            id: user?.id.toString() as string,
+            name: user?.name,
+            image: user?.avatar,
+          },
+          user?.streamToken
+        );
+        console.log('Connected to stream 2');
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-  //     return () => {
-  //       client.disconnectUser();
-  //       console.log('User disconnected');
-  //     };
-  //   }
-  // }, [person?.user]);
-
-  if (error || isPaused) {
-    return <ErrorComponent refetch={refetch} />;
-  }
-
-  if (isPending || !isLoaded) {
-    return <LoadingComponent />;
-  }
-
-  if (isLoaded && !isSignedIn) {
-    return <Redirect href="/login" />;
-  }
+    connectUser();
+    return () => {
+      client.disconnectUser();
+      console.log('User disconnected');
+    };
+  }, []);
 
   const chatTheme: DeepPartial<Theme> = {
     channelPreview: {
@@ -69,6 +53,10 @@ export default function AppLayout() {
       },
     },
   };
+
+  if (!user) {
+    return <Redirect href="/login" />;
+  }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <OverlayProvider value={{ style: chatTheme }}>

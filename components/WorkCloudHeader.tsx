@@ -13,30 +13,6 @@ export const WorkCloudHeader = ({}: Props): JSX.Element => {
   const router = useRouter();
   return (
     <>
-      <View style={[{ flexDirection: 'row', justifyContent: 'space-between' }]}>
-        <Text
-          variant="titleLarge"
-          style={{
-            fontFamily: 'PoppinsBold',
-            fontSize: 20,
-            color: darkMode ? colors.white : colors.black,
-          }}
-        >
-          {' '}
-          Organizations
-        </Text>
-        <Pressable
-          onPress={() => router.push('/search')}
-          style={({ pressed }) => pressed && { opacity: 0.5 }}
-        >
-          <FontAwesome
-            name="search"
-            size={20}
-            color={darkMode ? colors.white : colors.black}
-          />
-        </Pressable>
-      </View>
-
       <Pressable
         onPress={() => router.push('/create-workspace')}
         style={[

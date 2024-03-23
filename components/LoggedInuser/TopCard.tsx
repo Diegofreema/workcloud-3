@@ -10,9 +10,10 @@ type Props = {
   id?: string;
   image?: string;
   name?: string | null;
+  ownedWks?: number;
 };
 
-export const TopCard = ({ id, image, name }: Props): JSX.Element => {
+export const TopCard = ({ id, image, name, ownedWks }: Props): JSX.Element => {
   const router = useRouter();
 
   const handleNavigate = () => {
@@ -27,7 +28,7 @@ export const TopCard = ({ id, image, name }: Props): JSX.Element => {
           <VStack justifyContent="center" alignItems="center">
             <MyText poppins="Medium">Owned WS</MyText>
             <MyText poppins="Bold" fontSize={14}>
-              20
+              {ownedWks}
             </MyText>
           </VStack>
           <VStack justifyContent="center" alignItems="center">

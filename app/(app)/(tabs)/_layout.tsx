@@ -96,7 +96,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="workspace"
+          name="organization"
           options={{
             title: 'Organizations',
             tabBarIcon: ({ focused, size }) => (

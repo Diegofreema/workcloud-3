@@ -7,7 +7,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { MyText } from '../Ui/MyText';
 import { colors } from '../../constants/Colors';
 import { VideoPreview } from '../Ui/VideoPreview';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth, useSignIn } from '@clerk/clerk-expo';
+import { useData } from '@/hooks/useData';
 
 type Props = {};
 export const call = {
@@ -19,13 +20,16 @@ export const call = {
 const fourItems = [1, 2, 3];
 export const BottomCard = ({}: Props): JSX.Element => {
   const { records } = useLocalSearchParams();
-  const { signOut } = useAuth();
+  const { removeId } = useData();
+
   const handleNavigate = () => {
     router.push('/settings');
   };
 
   const logout = () => {
-    signOut();
+    removeId();
+
+    router.replace('/');
   };
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
