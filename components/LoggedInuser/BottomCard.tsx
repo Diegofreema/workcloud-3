@@ -9,8 +9,11 @@ import { colors } from '../../constants/Colors';
 import { VideoPreview } from '../Ui/VideoPreview';
 import { useAuth, useSignIn } from '@clerk/clerk-expo';
 import { useData } from '@/hooks/useData';
+import { FontAwesome } from '@expo/vector-icons';
 
-type Props = {};
+type Props = {
+  workId?: any;
+};
 export const call = {
   time: '20 min ago',
   from: 'Called on fidelity WS',
@@ -18,7 +21,8 @@ export const call = {
 };
 
 const fourItems = [1, 2, 3];
-export const BottomCard = ({}: Props): JSX.Element => {
+export const BottomCard = ({ workId }: Props): JSX.Element => {
+  console.log('🚀 ~ BottomCard ~ workId:', workId);
   const { records } = useLocalSearchParams();
   const { removeId } = useData();
 
@@ -81,6 +85,22 @@ export const BottomCard = ({}: Props): JSX.Element => {
             </MyText>
           </HStack>
         </Pressable>
+        {workId && (
+          <Pressable
+            style={{
+              marginTop: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}
+            onPress={() => router.push(`/myWorkerProfile/${workId}`)}
+          >
+            <FontAwesome name="user" size={24} color={colors.lightBlue} />
+            <MyText poppins="Medium" fontSize={13}>
+              Worker's Profile
+            </MyText>
+          </Pressable>
+        )}
       </VStack>
     </ScrollView>
   );

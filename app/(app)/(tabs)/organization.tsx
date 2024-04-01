@@ -37,7 +37,7 @@ const workspace = (props: Props) => {
     isRefetching,
     error: errorOther,
   } = useOtherOrgs(id);
-  console.log('🚀 ~ workspace ~ otherOrgs:', otherOrgs, 'error', errorOther);
+
   const handleRefetch = () => {
     refetch();
     refetchOther();
@@ -51,10 +51,10 @@ const workspace = (props: Props) => {
   if (isPending || isPendingOther) {
     return <LoadingComponent />;
   }
-  console.log('🚀 ~ workspace ~ otherOrgs:', otherOrgs);
-  console.log('🚀 ~ workspace ~ data:', data);
 
   const hasNoOrg = data === null;
+  const { organizations } = data;
+  const organization = organizations[0];
 
   return (
     <View style={{ flex: 1, ...defaultStyle }}>
@@ -82,7 +82,7 @@ const workspace = (props: Props) => {
         </Pressable>
       </View>
       <View style={{ marginVertical: 14 }}>
-        {data === null ? (
+        {!data.organizations.length ? (
           <WorkCloudHeader />
         ) : (
           <View style={{ gap: 15 }}>
@@ -97,7 +97,11 @@ const workspace = (props: Props) => {
               Your organization
             </Text>
             {/* @ts-ignore */}
-            <WorkspaceItem org={data} />
+            <WorkspaceItem
+              name={organization?.name}
+              avatar={organization.avatar}
+              ownerId={organization?.ownerId?.userId}
+            />
           </View>
         )}
       </View>

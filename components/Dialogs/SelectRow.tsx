@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, Pressable, View, FlatList } from 'react-native';
 
 import Modal from 'react-native-modal';
@@ -7,14 +7,11 @@ import { HStack } from '@gluestack-ui/themed';
 import { colors } from '../../constants/Colors';
 import { useSelectRow } from '../../hooks/useSelectRow';
 import { Divider } from 'react-native-paper';
-import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import Toast from 'react-native-toast-message';
-import { useAuth } from '@clerk/clerk-expo';
-import { usePersonalOrgs } from '../../lib/queries';
-import { LoadingComponent } from '../Ui/LoadingComponent';
 import { useQueryClient } from '@tanstack/react-query';
 import { FontAwesome } from '@expo/vector-icons';
+import { useData } from '@/hooks/useData';
 
 const roles = [
   { role: 'Customer service' },
@@ -23,39 +20,39 @@ const roles = [
   { role: 'Logistics' },
   { role: 'ICT Processor' },
 ];
-export const SelectRow = () => {
+export const SelectRow = ({ organizationId }: { organizationId: number }) => {
   const { isOpen, onClose } = useSelectRow();
   const queryClient = useQueryClient();
-  const router = useRouter();
-  const { userId, isSignedIn } = useAuth();
 
-  const navigate = (role: string) => {
-    onClose();
-    router.push(`/wk/${role}`);
-    queryClient.invalidateQueries({ queryKey: ['wks'] });
-  };
+  const { id } = useData();
 
   const createWorkspace = async (role: string) => {
-    if (!isSignedIn) return;
-    const { error } = await supabase
-      .from('wks')
-      .upsert({ ownerId: userId, role })
-      .select();
-    if (error) {
+    try {
+      const { error } = await supabase
+        .from('workspace')
+        .insert({ role: role, ownerId: id, organizationId: organizationId });
+
+      if (!error) {
+        Toast.show({
+          type: 'success',
+          text1: 'Workspace created successfully',
+        });
+        queryClient.invalidateQueries({ queryKey: ['wks', id] });
+      }
+      if (error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Something went wrong',
+        });
+      }
+    } catch (error) {
       console.log(error);
-      return Toast.show({
+      Toast.show({
         type: 'error',
         text1: 'Something went wrong',
-        text2: 'Please try again',
       });
     }
-    if (!error) {
-      Toast.show({
-        type: 'success',
-        text1: 'Workspace created',
-      });
-    }
-    navigate(role);
+    onClose();
   };
 
   return (

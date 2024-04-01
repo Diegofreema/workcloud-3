@@ -2,7 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import React from 'react';
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { usePersonalOrgs } from '../../../lib/queries';
+import { useGetWks, usePersonalOrgs } from '../../../lib/queries';
 import { useDarkMode } from '../../../hooks/useDarkMode';
 import { colors } from '../../../constants/Colors';
 import { EvilIcons } from '@expo/vector-icons';
@@ -20,6 +20,7 @@ import { Image } from 'expo-image';
 import { WorkspaceDetails } from '@/components/WorkspaceDetails';
 import { Button } from 'react-native-paper';
 import { format } from 'date-fns';
+import workspace from '../(tabs)/organization';
 
 type Props = {};
 type SubProps = {
@@ -117,6 +118,13 @@ const OrganizationDetails = (props: Props) => {
 
   const { data, isPending, error, refetch, isPaused } = usePersonalOrgs(id);
 
+  const {
+    data: workspaces,
+    isPending: isPendingWks,
+    isError,
+    isPaused: isPausedWks,
+  } = useGetWks(id);
+
   if (isPending) {
     return <LoadingComponent />;
   }
@@ -125,20 +133,26 @@ const OrganizationDetails = (props: Props) => {
     refetch();
   };
 
-  if (error || isPaused) {
+  if (error || isError || isPaused || isPausedWks) {
     return <ErrorComponent refetch={handleRefetch} />;
   }
-  if (isPending) {
+  if (isPending || isPendingWks) {
     return <LoadingComponent />;
   }
 
-  const org = data;
-  console.log('🚀 ~ OrganizationDetails ~ org:', org);
+  const { organizations } = data;
+
+  const { wks } = workspaces;
+
+  const organization = organizations[0];
+
+  const startDay = organization.workDays.split('-')[0];
+  const endDay = organization.workDays.split('-')[1];
 
   return (
     <>
-      {/* <CreateWorkspaceModal wks={workspaceData} /> */}
-      <SelectRow />
+      <CreateWorkspaceModal workspace={wks} />
+      <SelectRow organizationId={organization.id} />
       <DeleteWksSpaceModal />
       <View style={{ flex: 1, paddingHorizontal: 20 }}>
         <AuthHeader
@@ -160,7 +174,7 @@ const OrganizationDetails = (props: Props) => {
               <Image
                 style={{ width: 70, height: 70, borderRadius: 50 }}
                 contentFit="cover"
-                source={{ uri: org?.avatar }}
+                source={{ uri: organization?.avatar }}
               />
               <View>
                 <Text
@@ -171,7 +185,7 @@ const OrganizationDetails = (props: Props) => {
                     color: darkMode ? colors.white : colors.black,
                   }}
                 >
-                  {org?.organizationName}
+                  {organization?.name}
                 </Text>
                 <Text
                   style={{
@@ -180,21 +194,21 @@ const OrganizationDetails = (props: Props) => {
                     color: darkMode ? colors.white : colors.black,
                   }}
                 >
-                  {org?.ownerId?.name} | Admin
+                  {organization?.ownerId?.name} | Admin
                 </Text>
               </View>
             </View>
-            {id === org?.ownerId._id && (
+            {id === organization?.ownerId?.userId && (
               <Button
                 onPress={() =>
-                  router.push(`/(app)/(organization)/edit/${organizationId}`)
+                  router.push(`/(app)/(organization)/edit/${organization?.id}`)
                 }
                 textColor="white"
                 buttonColor={colors.buttonBlue}
                 style={{ borderRadius: 5 }}
                 labelStyle={{ fontFamily: 'PoppinsMedium', fontSize: 12 }}
               >
-                Edit workspace
+                Edit organization
               </Button>
             )}
           </View>
@@ -213,7 +227,7 @@ const OrganizationDetails = (props: Props) => {
                 color: darkMode ? colors.white : colors.black,
               }}
             >
-              {org?.description}
+              {organization?.description}
             </Text>
             <View
               style={{
@@ -232,7 +246,7 @@ const OrganizationDetails = (props: Props) => {
                   textTransform: 'uppercase',
                 }}
               >
-                {org?.startDay} - {org?.endDay}
+                {startDay} - {endDay}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View
@@ -249,7 +263,7 @@ const OrganizationDetails = (props: Props) => {
                       fontSize: 10,
                     }}
                   >
-                    {org?.startTime}
+                    {organization?.start}
                   </Text>
                 </View>
                 <Text> — </Text>
@@ -268,7 +282,7 @@ const OrganizationDetails = (props: Props) => {
                       fontSize: 10,
                     }}
                   >
-                    {org?.endTime}
+                    {organization?.end}
                   </Text>
                 </View>
               </View>
@@ -280,9 +294,13 @@ const OrganizationDetails = (props: Props) => {
               marginTop: 15,
             }}
           >
-            <OrganizationItems name="envelope" text={org?.email} />
-            <OrganizationItems name="location" text={org?.location} />
-            <OrganizationItems name="link" text={org?.websiteUrl} website />
+            <OrganizationItems name="envelope" text={organization?.email} />
+            <OrganizationItems name="location" text={organization?.location} />
+            <OrganizationItems
+              name="link"
+              text={organization?.website}
+              website
+            />
             <Text
               style={{
                 fontFamily: 'PoppinsBold',
@@ -290,7 +308,7 @@ const OrganizationDetails = (props: Props) => {
                 color: darkMode ? colors.white : colors.black,
               }}
             >
-              Members {org?.followers?.length}
+              Members {organization?.followers?.length}
             </Text>
           </View>
           <View>
@@ -320,13 +338,13 @@ const OrganizationDetails = (props: Props) => {
             />
 
             <WorkspaceDetails
-              onPress={() => router.push(`/staffs/${org?._id}`)}
+              onPress={() => router.push(`/staffs/${id}`)}
               darkMode={darkMode}
               uri={require('../../../assets/images/staff.png')}
               name="Staffs"
             />
             <WorkspaceDetails
-              onPress={() => {}}
+              onPress={() => router.push(`/messages`)}
               darkMode={darkMode}
               uri={require('../../../assets/images/message.png')}
               name="Messages"
@@ -346,13 +364,6 @@ const OrganizationDetails = (props: Props) => {
               alignItems: 'center',
             }}
           >
-            <WorkspaceDetails
-              onPress={() => {}}
-              darkMode={darkMode}
-              uri={require('../../../assets/images/sales.png')}
-              name="Sales"
-            />
-
             <WorkspaceDetails
               onPress={() => {}}
               darkMode={darkMode}

@@ -10,39 +10,71 @@ import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useProfile } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Profile } from '@/constants/types';
 
 type Props = {};
 
 const MyProfile = (props: Props) => {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [user, setUser] = useState<Profile | null>();
   const [loading, setLoading] = useState(false);
-  const { data, refetch, isPaused, isPending, isError, isRefetching } =
-    useProfile(id);
+  console.log('🚀 ~ MyProfile ~ user:', user);
+  const queryClient = useQueryClient();
 
-  if (isError || isPaused) {
-    return <ErrorComponent refetch={refetch} />;
-  }
+  useEffect(() => {
+    setLoading(true);
+    const getProfile = async () => {
+      const { data, error } = await supabase
+        .from('user')
+        .select(
+          `name, avatar, streamToken, email, userId , organizationId (*), workerId (*)`
+        )
+        .eq('userId', id)
+        .single();
 
-  if (isPending) {
+      return {
+        profile: data,
+        error,
+      };
+    };
+    const getUser = async () => {
+      const data = await queryClient.fetchQuery({
+        queryKey: ['profile', id],
+        queryFn: getProfile,
+      });
+      // @ts-ignore
+      setUser(data?.profile);
+      setLoading(false);
+    };
+
+    getUser();
+  }, []);
+  console.log('🚀 ~ MyProfile ~ user:', user);
+
+  const numberOfWorkspace = user?.workspace?.length || 0;
+
+  console.log('🚀 ~ MyProfile ~', user);
+  if (loading) {
     return <LoadingComponent />;
   }
-  const { user } = data;
   return (
     <View style={{ flex: 1 }}>
       <View style={defaultStyle}>
         <HeaderNav title="Profile" />
       </View>
       <TopCard
-        id={user?.id}
+        id={user?.userId}
         name={user?.name}
-        image={user?.avatarUrl}
-        ownedWks={user?.workspace}
+        image={user?.avatar}
+        ownedWks={numberOfWorkspace}
       />
       <View style={{ marginTop: 20, ...defaultStyle }}>
         <MiddleCard />
       </View>
       <View style={{ marginTop: 20, ...defaultStyle }}>
-        <BottomCard />
+        <BottomCard workId={user?.workerId?.id} />
       </View>
     </View>
   );

@@ -12,31 +12,43 @@ import { MyButton } from '../Ui/MyButton';
 import { useDeleteWks } from '@/hooks/useDeleteWks';
 import { supabase } from '@/lib/supabase';
 import Toast from 'react-native-toast-message';
+import axios from 'axios';
+import { useData } from '@/hooks/useData';
 
 export const DeleteWksSpaceModal = () => {
   const { onClose, id, isOpen } = useDeleteWks();
+  const { id: userId } = useData();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
 
   const deleteWks = async () => {
-    setDeleting(true);
-    const { error } = await supabase.from('wks').delete().eq('id', id);
-    if (error) {
-      setDeleting(false);
-      return Toast.show({
+    try {
+      const { error } = await supabase.from('workspace').delete().eq('id', id);
+      if (!error) {
+        Toast.show({
+          type: 'success',
+          text1: 'Workspace deleted successfully',
+        });
+        queryClient.invalidateQueries({ queryKey: ['wks', userId] });
+      }
+
+      if (error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Something went wrong',
+        });
+      }
+
+      onClose();
+    } catch (error) {
+      console.log(error);
+      Toast.show({
         type: 'error',
         text1: 'Something went wrong',
-        text2: 'Please try again',
       });
+    } finally {
+      setDeleting(false);
     }
-
-    Toast.show({
-      type: 'success',
-      text1: 'Workspace deleted successfully',
-    });
-    queryClient.invalidateQueries({ queryKey: ['wks'] });
-    onClose();
-    setDeleting(false);
   };
   return (
     <View>

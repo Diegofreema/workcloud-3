@@ -1,19 +1,18 @@
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import React from 'react';
-import { Container } from '@/components/Ui/Container';
-import { HeaderNav } from '@/components/HeaderNav';
-import { usePendingWorkers } from '@/lib/queries';
+import { usePendingRequest } from '@/lib/queries';
+import { useData } from '@/hooks/useData';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
-import { UserPreview } from '@/components/Ui/UserPreview';
-import { MyText } from '@/components/Ui/MyText';
+import { Container } from '@/components/Ui/Container';
+import { HeaderNav } from '@/components/HeaderNav';
 import { EmptyText } from '@/components/EmptyText';
-import { useData } from '@/hooks/useData';
+import { UserPreview, WorkPreview } from '@/components/Ui/UserPreview';
 
 type Props = {};
 
-const PendingStaffs = (props: Props) => {
-  const { id } = useData();
+const Requests = (props: Props) => {
+  const { user, id } = useData();
   const {
     data,
     isPaused,
@@ -22,8 +21,8 @@ const PendingStaffs = (props: Props) => {
     refetch,
     isRefetching,
     isRefetchError,
-  } = usePendingWorkers(id);
-  console.log('🚀 ~ PendingStaffs ~ data:', data?.requestsList);
+  } = usePendingRequest(id);
+  console.log('🚀 ~ Requests ~ data:', data?.requestsList[0]?._id);
   if (isError || isRefetchError || isPaused || data?.error) {
     return <ErrorComponent refetch={refetch} />;
   }
@@ -31,15 +30,13 @@ const PendingStaffs = (props: Props) => {
   if (isPending) {
     return <LoadingComponent />;
   }
-
-  console.log(data);
-
+  // 6602c083d9c51008cb52b02c
   return (
     <Container>
-      <HeaderNav title="Pending Staffs" />
+      <HeaderNav title="Pending Requests" />
       <FlatList
         style={{ marginTop: 10 }}
-        ListEmptyComponent={() => <EmptyText text="No pending staffs" />}
+        ListEmptyComponent={() => <EmptyText text="No pending request" />}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         onRefresh={refetch}
         refreshing={isRefetching}
@@ -47,12 +44,12 @@ const PendingStaffs = (props: Props) => {
         contentContainerStyle={{ paddingBottom: 50 }}
         data={data?.requestsList}
         renderItem={({ item }) => (
-          <UserPreview
-            imageUrl={item?.to?.avatar?.url}
-            name={item?.to?.name}
-            navigate
+          <WorkPreview
+            imageUrl={item?.from?.organizations?.avatar.url}
+            name={item?.from?.organizations.organizationName}
             subText={item?.status}
-            id={item?.to?.worker}
+            id={item?._id}
+            navigate
           />
         )}
         keyExtractor={(item) => item?._id.toString()}
@@ -61,6 +58,4 @@ const PendingStaffs = (props: Props) => {
   );
 };
 
-export default PendingStaffs;
-
-const styles = StyleSheet.create({});
+export default Requests;

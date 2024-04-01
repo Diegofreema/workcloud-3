@@ -1,27 +1,30 @@
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import React, { useEffect } from 'react';
-import { AuthTitle } from '../../components/AuthTitle';
-import { Button, Text } from 'react-native-paper';
-import { colors } from '../../constants/Colors';
-import { InputComponent } from '../../components/InputComponent';
+
 import { useFormik } from 'formik';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SelectList } from 'react-native-dropdown-select-list';
 
 import * as yup from 'yup';
-import { defaultStyle } from '../../constants';
-import { AuthHeader } from '../../components/AuthHeader';
-import { useDarkMode } from '../../hooks/useDarkMode';
+
 import Toast from 'react-native-toast-message';
 import { MyText } from '@/components/Ui/MyText';
 import { useQueryClient } from '@tanstack/react-query';
 import { useData } from '@/hooks/useData';
 import axios from 'axios';
+import { defaultStyle } from '../../../../constants/index';
+import { AuthHeader } from '@/components/AuthHeader';
+import { AuthTitle } from '@/components/AuthTitle';
+import { colors } from '@/constants/Colors';
+import { useDarkMode } from '@/hooks/useDarkMode';
+import { InputComponent } from '@/components/InputComponent';
+import { Button } from 'react-native-paper';
+import { useGetWorkerProfile } from '@/lib/queries';
+import { ErrorComponent } from '@/components/Ui/ErrorComponent';
+import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { supabase } from '@/lib/supabase';
 type Props = {};
 const validationSchema = yup.object().shape({
-  email: yup.string().email('Invalid email').required('Email is required'),
-
   gender: yup.string().required('Gender is required'),
   location: yup.string().required('Location is required'),
   experience: yup
@@ -48,8 +51,17 @@ const genders = [
 ];
 const CreateProfile = (props: Props) => {
   const { darkMode } = useDarkMode();
-  const { user, id } = useData();
 
+  const { user, id } = useData();
+  const {
+    data,
+    isPaused,
+    isPending,
+    isError,
+    refetch,
+    isRefetching,
+    isRefetchError,
+  } = useGetWorkerProfile(id);
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -65,58 +77,44 @@ const CreateProfile = (props: Props) => {
     resetForm,
   } = useFormik({
     initialValues: {
-      email: user?.email,
       location: '',
       gender: '',
       skills: '',
       experience: '',
-      userId: user?.id,
       qualifications: '',
     },
     validationSchema,
     onSubmit: async (values) => {
-      const {
-        experience,
-
-        location,
-        skills,
-        userId,
-
-        gender,
-
-        qualifications,
-      } = values;
+      const { experience, location, skills, gender, qualifications } = values;
 
       try {
-        const { error } = await supabase.from('worker').insert({
-          userId,
-          skills,
-          experience,
-          location,
-          gender,
-          qualifications,
+        const { error } = await supabase
+          .from('worker')
+          .update({
+            experience,
+            location,
+            skills,
+            gender,
+            qualifications,
+          })
+          .eq('userId', id);
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: `${user?.name} your work profile has been updated`,
         });
-        if (!error) {
-          Toast.show({
-            type: 'success',
-            text1: 'Welcome to onboard',
-            text2: `${user?.name} your work profile was created`,
-          });
-          queryClient.invalidateQueries({ queryKey: ['profile'] });
-
-          router.push(`/myWorkerProfile/${userId}`);
-          resetForm();
-        }
-
+        queryClient.invalidateQueries({ queryKey: ['worker'] });
         if (error) {
           console.log(error);
 
           Toast.show({
             type: 'error',
-            text1: 'Error, failed to create profile',
-            text2: 'Please try again',
+            text1: 'Something went wrong',
           });
         }
+        console.log(data, 'Data');
+
+        router.back();
       } catch (error: any) {
         Toast.show({
           type: 'error',
@@ -126,20 +124,33 @@ const CreateProfile = (props: Props) => {
       }
     },
   });
-  const {
-    gender,
-
-    location,
-    experience,
-    skills,
-    qualifications,
-  } = values;
+  const { gender, location, experience, skills, qualifications } = values;
   useEffect(() => {
     if (experience.length > 150) {
       setValues({ ...values, experience: experience.substring(0, 150) });
     }
   }, [experience]);
 
+  useEffect(() => {
+    if (data?.worker) {
+      const { worker } = data;
+      setValues({
+        experience: worker.experience,
+        gender: worker.gender,
+        location: worker.location,
+        qualifications: worker.qualifications,
+        skills: worker.skills,
+      });
+    }
+  }, [data]);
+
+  if (isError || isRefetchError || isPaused) {
+    return <ErrorComponent refetch={refetch} />;
+  }
+
+  if (isPending) {
+    return <LoadingComponent />;
+  }
   return (
     <ScrollView
       style={{ flex: 1 }}
@@ -148,7 +159,7 @@ const CreateProfile = (props: Props) => {
     >
       <AuthHeader />
       <View style={{ marginBottom: 10 }} />
-      <AuthTitle>Set up your profile to work on workcloud</AuthTitle>
+      <AuthTitle>Edit your worker's profile</AuthTitle>
       <MyText
         poppins="Light"
         fontSize={15}

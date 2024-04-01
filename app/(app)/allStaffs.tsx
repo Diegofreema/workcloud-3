@@ -8,19 +8,22 @@ import { EvilIcons } from '@expo/vector-icons';
 import { useGetOtherWorkers, usePendingWorkers } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
-import { Workers } from '@/constants/types';
+import { WorkType, Workers } from '@/constants/types';
 import { HStack, VStack } from '@gluestack-ui/themed';
 import { Image } from 'expo-image';
 import { MyText } from '@/components/Ui/MyText';
 import { useRouter } from 'expo-router';
 import { UserPreview } from '@/components/Ui/UserPreview';
+import { EmptyText } from '@/components/EmptyText';
+import { useData } from '@/hooks/useData';
 
 type Props = {};
 
 const AllStaffs = (props: Props) => {
   const { id, role } = useDetailsToAdd();
-  const [staffs, setStaffs] = useState<Workers[] | undefined>([]);
-  console.log('🚀 ~ AllStaffs ~ id:', id, 'role', role);
+  const { id: userId } = useData();
+  const [staffs, setStaffs] = useState<Workers[]>();
+  console.log('🚀 ~ AllStaffs ~ id:', id, 'role', staffs?.[0].userId?.userId);
   const {
     data,
     isPending,
@@ -29,42 +32,39 @@ const AllStaffs = (props: Props) => {
     refetch,
     isRefetching,
     isRefetchError,
-  } = useGetOtherWorkers();
-  const {
-    data: pendingData,
-    isPending: isPendingData,
-    isError: isErrorData,
-    isPaused: isPausedData,
-    refetch: refetchData,
-    isRefetching: isRefetchingData,
-    isRefetchError: isRefetchErrorData,
-  } = usePendingWorkers();
+  } = useGetOtherWorkers(userId);
+
   useEffect(() => {
     if (data?.worker) {
-      setStaffs(data?.worker);
+      const filteredData = data.worker.filter(
+        (worker) => worker?.userId?.userId !== userId
+      );
+      setStaffs(filteredData);
     }
-  }, [data?.worker]);
+  }, [data]);
+
+  // const {
+  //   data: pendingData,
+  //   isPending: isPendingData,
+  //   isError: isErrorData,
+  //   isPaused: isPausedData,
+  //   refetch: refetchData,
+  //   isRefetching: isRefetchingData,
+  //   isRefetchError: isRefetchErrorData,
+  // } = usePendingWorkers();
 
   const handleRefetch = () => {
-    refetchData();
     refetch();
   };
-  if (
-    isPaused ||
-    isError ||
-    isPausedData ||
-    isErrorData ||
-    isRefetchError ||
-    isRefetchErrorData
-  ) {
+  if (isPaused || isError) {
     return <ErrorComponent refetch={handleRefetch} />;
   }
 
-  if (isPending || isPendingData) {
+  if (isPending) {
     return <LoadingComponent />;
   }
 
-  const onRefreshing = isRefetching || isRefetchingData;
+  const onRefreshing = isRefetching;
 
   return (
     <View style={styles.container}>
@@ -72,28 +72,20 @@ const AllStaffs = (props: Props) => {
       <FlatList
         onRefresh={handleRefetch}
         refreshing={onRefreshing}
-        data={staffs}
+        data={data.worker}
         renderItem={({ item }) => (
           <UserPreview
-            id={item?.id}
-            imageUrl={item?.imageUrl}
-            name={item?.name}
+            id={item?.userId?.userId}
+            imageUrl={item?.userId?.avatar}
+            name={item?.userId?.name}
             subText={item?.location}
             navigate
           />
         )}
         style={{ marginTop: 20 }}
         ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
-        keyExtractor={(item) => item?.id.toString()}
-        ListEmptyComponent={() => (
-          <MyText
-            poppins="Bold"
-            fontSize={20}
-            style={{ marginBottom: 20, verticalAlign: 'middle' }}
-          >
-            No staffs found
-          </MyText>
-        )}
+        keyExtractor={(item, index) => index.toString()}
+        ListEmptyComponent={() => <EmptyText text="No staff yet" />}
       />
     </View>
   );

@@ -18,6 +18,7 @@ import OTPTextView from 'react-native-otp-textinput';
 import { Image } from 'expo-image';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '@/lib/supabase';
 // import Clipboard from '@react-native-clipboard/clipboard';
 
 const validationSchema = yup.object().shape({
@@ -86,14 +87,36 @@ export default function SignUpScreen() {
         );
         console.log(data);
         if (data?.user?.id) {
-          setId(data?.user?.id);
+          const { data: userData, error } = await supabase
+            .from('user')
+            .insert({
+              userId: data.user.id,
+              email: data.user.email,
+              streamToken: data.user.streamToken,
+              name: data.user.name,
+              avatar: imageUrl,
+            })
+            .select();
+          console.log('🚀 ~ onSubmit: ~ userData:', userData);
 
-          setPendingVerification(true);
-          Toast.show({
-            type: 'success',
-            text1: 'Please check your email',
-            text2: 'A verification code has been sent ' + emailAddress,
-          });
+          if (!error) {
+            setId(data?.user?.id);
+            setPendingVerification(true);
+            Toast.show({
+              type: 'success',
+              text1: 'Please check your email',
+              text2: 'A verification code has been sent ' + emailAddress,
+            });
+          }
+
+          if (error) {
+            console.log(error);
+
+            Toast.show({
+              type: 'error',
+              text1: 'Please something went wrong',
+            });
+          }
         }
       } catch (error: any) {
         Toast.show({
@@ -106,7 +129,6 @@ export default function SignUpScreen() {
   });
   const { emailAddress, firstName, lastName, password, confirmPassword } =
     values;
-  console.log(id);
 
   const setOtpInput = (text: any) => {
     setCode(text);

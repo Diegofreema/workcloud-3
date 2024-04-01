@@ -1,4 +1,4 @@
-import { EvilIcons } from '@expo/vector-icons';
+import { EvilIcons, FontAwesome } from '@expo/vector-icons';
 import { Button, Center, HStack, VStack } from '@gluestack-ui/themed';
 import PhoneInput from 'react-native-phone-input';
 import { Image } from 'expo-image';
@@ -9,9 +9,10 @@ import {
   Platform,
   ScrollView,
   Pressable,
+  TouchableOpacity,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { MyText } from '../Ui/MyText';
 import { InputComponent } from '../InputComponent';
@@ -20,16 +21,31 @@ import { MyButton } from '../Ui/MyButton';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { useSaved } from '../../hooks/useSaved';
+import { Person, Profile } from '@/constants/types';
+import { format } from 'date-fns';
+import Toast from 'react-native-toast-message';
+import axios from 'axios';
+import { useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { useData } from '@/hooks/useData';
 const validationSchema = yup.object().shape({
   firstName: yup.string().required('First name is required'),
   lastName: yup.string().required('Last name is required'),
-  email: yup.string().email('Invalid email').required('Email is required'),
-  gender: yup.string().required('Gender is required'),
-  date_of_birth: yup.string().required('Date of birth is required'),
-  phoneNumber: yup.string().required('Phone number is required'),
+  email: yup.string().email('Invalid email'),
+  avatar: yup.string(),
+  date_of_birth: yup.string(),
+  phoneNumber: yup.string(),
 });
-export const ProfileUpdateForm = (): JSX.Element => {
+export const ProfileUpdateForm = ({
+  person,
+}: {
+  person: Profile;
+}): JSX.Element => {
+  console.log('🚀 ~ ProfileUpdateForm ~ person:', person);
   const phoneInputRef = useRef<PhoneInput>(null);
+  const { id } = useData();
+  const queryClient = useQueryClient();
   const { onOpen } = useSaved();
   const {
     handleSubmit,
@@ -45,38 +61,90 @@ export const ProfileUpdateForm = (): JSX.Element => {
       firstName: '',
       lastName: '',
       email: '',
-      gender: 'male',
       date_of_birth: '',
       phoneNumber: '',
+      avatar: '',
     },
     validationSchema,
-    onSubmit: () => {
-      setLoading(true);
-      console.log(values);
-      phoneInputRef.current?.setValue(values.phoneNumber);
+    onSubmit: async () => {
+      const { date_of_birth, email, firstName, lastName, phoneNumber, avatar } =
+        values;
+
+      try {
+        const { error } = await supabase
+          .from('user')
+          .update({
+            avatar: avatar,
+            name: `${firstName} ${lastName}`,
+            email: email,
+            birthday: date_of_birth,
+            phoneNumber: phoneNumber,
+          })
+          .eq('userId', id);
+
+        if (!error) {
+          Toast.show({
+            type: 'success',
+            text1: 'Profile updated successfully',
+          });
+          queryClient.invalidateQueries({
+            queryKey: ['profile', id],
+          });
+        }
+
+        if (error) {
+          console.log(error, 'Error');
+          Toast.show({
+            type: 'error',
+            text1: 'Error updating profile',
+          });
+        }
+      } catch (error: any) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error updating profile',
+        });
+        console.log(error, 'Error');
+      }
+
       resetForm();
-      setLoading(false);
-      onOpen();
+
+      router.back();
     },
   });
-  const [imgUrl, setImgUrl] = useState('https://via.placeholder.com/48x48');
+
   const [inputDate, setInputDate] = useState<Date | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
+  console.log(values.avatar);
+
   const [date, setDate] = useState(new Date());
   const [dateOfBirth, setDateOfBirth] = useState(
     new Date().toISOString().split('T')[0]
   );
   const [showPicker, setShowPicker] = useState(false);
 
+  useEffect(() => {
+    if (person) {
+      setFieldValue('firstName', person.name.split(' ')[0]);
+      setFieldValue('lastName', person.name.split(' ')[1]);
+      setFieldValue('email', person.email);
+
+      setFieldValue('date_of_birth', person.birthday);
+      setFieldValue('phoneNumber', person.phoneNumber);
+      setFieldValue('avatar', person.avatar);
+      phoneInputRef.current?.setValue(person.phoneNumber);
+    }
+  }, [person]);
+
   const pickImageAsync = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
       quality: 1,
+      base64: true,
     });
 
     if (!result.canceled) {
-      console.log(result);
-      setImgUrl(result.assets[0].uri);
+      const base64 = `data:image/png;base64,${result.assets[0].base64}`;
+      setFieldValue('avatar', base64);
     } else {
       console.log('User cancelled image picker');
     }
@@ -96,11 +164,15 @@ export const ProfileUpdateForm = (): JSX.Element => {
       setDate(currentDate);
       if (Platform.OS === 'android') {
         setDateOfBirth(currentDate.toISOString().split('T')[0]);
-        setFieldValue('date_of_birth', currentDate.toISOString().split('T')[0]);
+        setFieldValue(
+          'date_of_birth',
+          format(currentDate.toISOString(), 'yyyy-MM-dd')
+        );
         onHideDatePicker();
       }
     }
   };
+  console.log(values.date_of_birth);
 
   const onConfirmIos = () => {
     setDateOfBirth(inputDate?.toISOString().split('T')[0] || '');
@@ -113,22 +185,38 @@ export const ProfileUpdateForm = (): JSX.Element => {
       contentContainerStyle={{ paddingBottom: 100 }}
       showsVerticalScrollIndicator={false}
     >
-      <Center>
-        <View>
+      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+        <View
+          style={{
+            width: 100,
+            height: 100,
+            borderRadius: 50,
+          }}
+        >
           <Image
-            source={{ uri: imgUrl }}
-            style={{ width: 58, height: 58, borderRadius: 9999, marginTop: 20 }}
+            contentFit="cover"
+            style={{ width: 100, height: 100, borderRadius: 50 }}
+            source={{ uri: values.avatar }}
           />
-
-          <EvilIcons
+          <TouchableOpacity
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 3,
+              backgroundColor: 'black',
+              padding: 5,
+              borderRadius: 30,
+              width: 30,
+              height: 30,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
             onPress={pickImageAsync}
-            name="camera"
-            size={14}
-            color="black"
-            style={styles.camera}
-          />
+          >
+            <FontAwesome name="plus" size={20} color={'white'} />
+          </TouchableOpacity>
         </View>
-      </Center>
+      </View>
       <View style={{ marginTop: 50 }}>
         <MyText style={{ marginBottom: 10 }} poppins="Bold" fontSize={14}>
           User information
@@ -199,49 +287,6 @@ export const ProfileUpdateForm = (): JSX.Element => {
             {touched.phoneNumber && errors.phoneNumber && (
               <MyText poppins="Medium" style={styles.error}>
                 {errors.phoneNumber}
-              </MyText>
-            )}
-          </>
-          <>
-            <MyText
-              style={{
-                marginBottom: 5,
-
-                fontSize: 11,
-              }}
-              poppins="Medium"
-            >
-              Gender
-            </MyText>
-            <SelectList
-              placeholder="Select your community"
-              boxStyles={{
-                ...styles.border,
-              }}
-              defaultOption={{
-                key: 'male',
-                value: 'Male',
-              }}
-              dropdownStyles={{ backgroundColor: 'white' }}
-              dropdownTextStyles={{
-                color: 'black',
-                fontFamily: 'PoppinsLight',
-              }}
-              inputStyles={{
-                textAlign: 'left',
-                fontFamily: 'PoppinsMedium',
-              }}
-              setSelected={handleChange('gender')}
-              data={[
-                { key: 'male', value: 'Male' },
-                { key: 'female', value: 'Female' },
-              ]}
-              save="key"
-              search={false}
-            />
-            {touched.gender && errors.gender && (
-              <MyText poppins="Medium" style={styles.error}>
-                {errors.gender}
               </MyText>
             )}
           </>
@@ -326,7 +371,7 @@ export const ProfileUpdateForm = (): JSX.Element => {
         </VStack>
 
         <View style={{ marginTop: 50 }}>
-          <MyButton disabled={loading} onPress={() => handleSubmit()}>
+          <MyButton loading={isSubmitting} onPress={() => handleSubmit()}>
             Save Changes{' '}
           </MyButton>
         </View>

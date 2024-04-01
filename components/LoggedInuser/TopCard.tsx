@@ -1,11 +1,13 @@
 import { Button, HStack, VStack } from '@gluestack-ui/themed';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { MyText } from '../Ui/MyText';
 import { Image } from 'expo-image';
 import { colors } from '../../constants/Colors';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import {} from '@clerk/clerk-expo';
 import { UserPreview } from '../Ui/UserPreview';
+import { useData } from '@/hooks/useData';
+import { MyButton } from '../Ui/MyButton';
 type Props = {
   id?: string;
   image?: string;
@@ -13,11 +15,12 @@ type Props = {
   ownedWks?: number;
 };
 
-export const TopCard = ({ id, image, name, ownedWks }: Props): JSX.Element => {
+export const TopCard = ({ image, name, ownedWks }: Props): JSX.Element => {
   const router = useRouter();
-
+  const { id } = useData();
   const handleNavigate = () => {
     router.push(`/edit-profile/${id}`);
+    console.log('pressed');
   };
   return (
     <View>
@@ -37,14 +40,19 @@ export const TopCard = ({ id, image, name, ownedWks }: Props): JSX.Element => {
               20
             </MyText>
           </VStack>
-          <Button
-            style={{ backgroundColor: colors.dialPad }}
-            onPress={handleNavigate}
-          >
-            <MyText poppins="Medium" fontSize={12} style={{ color: 'white' }}>
-              Edit Profile
-            </MyText>
-          </Button>
+          <Link href="/edit-profile" asChild>
+            <Pressable
+              style={{
+                backgroundColor: colors.dialPad,
+                padding: 10,
+                borderRadius: 5,
+              }}
+            >
+              <MyText poppins="Medium" fontSize={12} style={{ color: 'white' }}>
+                Edit Profile
+              </MyText>
+            </Pressable>
+          </Link>
         </HStack>
       </View>
     </View>

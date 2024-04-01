@@ -14,3 +14,16 @@ export const createOrg = async (orgData: Org) => {
     return { error: error.response.data.error };
   }
 };
+
+export const updateOrg = async (orgData: Org) => {
+  try {
+    const { data } = await axios.post(
+      'http://192.168.240.212:3000/organization/update',
+      orgData
+    );
+
+    return data;
+  } catch (error: any) {
+    return { error: error.response.data.error };
+  }
+};

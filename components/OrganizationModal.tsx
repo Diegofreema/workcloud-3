@@ -6,11 +6,12 @@ import { Feather } from '@expo/vector-icons';
 import { colors } from '../constants/Colors';
 import { useRouter } from 'expo-router';
 import { MyText } from './Ui/MyText';
+import { useData } from '@/hooks/useData';
 
 type Props = {};
 
 export const OrganizationModal = ({}: Props): JSX.Element => {
-  const { user } = useUser();
+  const { user } = useData();
   const { isOpen, onClose } = useOrganizationModal();
   const router = useRouter();
 
@@ -36,7 +37,7 @@ export const OrganizationModal = ({}: Props): JSX.Element => {
             fontSize={20}
             style={{ verticalAlign: 'middle' }}
           >
-            Hi {user?.firstName || ''}
+            Hi {user?.name || ''}
           </MyText>
           <Pressable
             onPress={onClose}

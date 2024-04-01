@@ -8,55 +8,97 @@ export type connections =
   | null;
 
 export type Organization = {
-  org: {
-    _id: string;
-    avatar: string;
-    category: string;
-    createdAt?: string;
-    description: string;
-    email: string;
-    endDay: string;
-    followers?: string[];
-    location: string;
-    organizationName: string;
-    ownerId: string;
-    password?: string;
-    startDay: string;
-    websiteUrl: string;
-    startTime: string;
-    endTime: string;
-  };
+  avatar: string;
+  category: string;
+  created_at: string;
+  description: string;
+  email: string;
+  end: string;
+  folllowers: string[];
+  followers: number[];
+  id: number;
+  location: string;
+  name: string;
+  ownerId: Profile | null;
+  start: string;
+  website: string;
+  workDays: string;
+  workspaces: number[];
 };
 export type Org = {
   avatar: string;
   category: string;
-
+  created_at: string;
   description: string;
   email: string;
-  endDay: string;
-
+  end: string;
+  folllowers: string[];
+  followers: number[];
+  id: number;
   location: string;
-  organizationName: string;
-  ownerId: { _id: string; name: string };
-  password?: string;
-  startDay: string;
-  websiteUrl: string;
-  endTime: string;
-  startTime: string;
-  _id: string;
-  followers: string[];
+  name: string;
+  ownerId: string;
+  start: string;
+  website: string;
+  workDays: string;
+  workspaces: number[];
 };
 export type Profile = {
-  name: string | null;
-  avatarUrl: string;
+  avatar: string;
+  birthday?: string;
+  created_at?: string;
   email: string;
-  user_id: string;
   id?: number;
-  phone?: string;
-  date_of_birth?: string;
-  gender?: string;
-  streamToken?: string;
-  boarded?: boolean;
+  name: string;
+  organizationId: {
+    id: number;
+    avatar: string;
+    category: string;
+    created_at?: string;
+    description: string;
+    email: string;
+    end: string;
+    folllowers: string[];
+    followers: number[];
+
+    location: string;
+    name: string;
+    ownerId: string;
+    start: string;
+    website: string;
+    workDays: string;
+    workspaces: number[];
+  };
+  phoneNumber?: string;
+  posts?: number[];
+  streamToken: string;
+  userId: string;
+  workerId: {
+    created_at: string;
+    experience: string;
+    id: number;
+    location: string;
+    organizationId: number;
+    qualifications: string;
+    servicePointId: number;
+    skills: string;
+    userId: number;
+    workspaceId: number;
+  } | null;
+
+  workspace:
+    | {
+        active: boolean | null;
+        created_at: string;
+        id: number;
+        leisure: boolean | null;
+        organizationId: number | null;
+        ownerId: number | null;
+        responsibility: string | null;
+        salary: string | null;
+        waitlist: number[] | null;
+      }[]
+    | null;
 };
 
 export type Wks = {
@@ -64,37 +106,39 @@ export type Wks = {
   created_at: string;
   id: number;
   leisure: boolean;
+  organizationId: number;
+  ownerId: number;
+  responsibility: string;
+  salary: string;
+  waitlist: number[];
   role: string;
-  waiting_list: string;
+  workerId: string;
 };
 
 export type Workers = {
   created_at: string;
-  email: string;
-  exp: string;
-  gender: string;
-  id: number;
-  imageUrl: string;
-  location: string;
-  name: string;
-  orgId: string | null;
-  qualification: string;
-  skill: string;
-  userId: string;
-  workspaceId: string | null;
+  experience?: string;
+  id?: number;
+  location?: string;
+  organizationId?: Organization;
+  qualifications?: string;
+  servicePointId?: number;
+  skills: string;
+  userId: Profile;
+  workspaceId?: number;
   role: string;
+  bossId: string;
 };
 
 export type Requests = {
   created_at: string;
-  employerId: string;
+  from: string;
   id: number;
   responsibility: string;
   role: string;
   salary: string;
-  status: string;
-  workerId: number;
-  workers: Workers;
+  to: string;
+  pending: boolean;
 };
 
 export type Person = {
@@ -105,9 +149,114 @@ export type Person = {
     followers: number;
     id: string;
     name: string;
-    organizations: string | null;
+    organizations: { _id: string };
     posts: number;
     streamToken: string;
     workspace: number;
+    worker: { _id: string };
+    phoneNumber: string;
   };
+};
+
+export type ConnectionType = {
+  allConnections: {
+    _id: string;
+    userId: string;
+    organizationsId: string;
+    organization: {
+      organizationName: string;
+      open: boolean;
+      avatar: { url: string };
+      _id: string;
+    };
+    createdAt: string;
+  }[];
+};
+
+export type WorkerProfile = {
+  profile: {
+    _id: string;
+    createdAt: string;
+    exp: string;
+    gender: string;
+    location: string;
+    qualifications: string;
+    skills: string;
+    updatedAt: string;
+    userId: {
+      _id: string;
+      avatar: {
+        public_id: string;
+        url: string;
+      };
+      email: string;
+      name: string;
+    };
+    assignedWorkspace?: { _id: string; role: string };
+  };
+};
+
+export type WorkerProfileArray = {
+  profile: {
+    _id: string;
+    createdAt: string;
+    exp: string;
+    gender: string;
+    location: string;
+    qualifications: string;
+    skills: string;
+    updatedAt: string;
+    userId: {
+      _id: string;
+      avatar: {
+        public_id: string;
+        url: string;
+      };
+      email: string;
+      name: string;
+    };
+    assignedWorkspace?: string;
+  }[];
+};
+
+export type WorkType = {
+  created_at?: string;
+  experience?: string;
+  id?: number;
+  location?: string;
+  organizationId?: number;
+  qualifications?: string;
+  servicePointId?: number;
+  skills?: string;
+  userId?: {
+    avatar: string;
+    birthday: string;
+    created_at: string;
+    email: string;
+    id: number;
+    name: string;
+    organizationId: number;
+    phoneNumber: string;
+    posts: number[];
+    streamToken: string;
+    userId: string;
+    workerId: number;
+  };
+  workspaceId?: number;
+  bossId: string;
+  role: string;
+};
+
+export type Workspace = {
+  active: boolean;
+  created_at: string;
+  id: number;
+  leisure: boolean;
+  organizationId: number;
+  ownerId: string;
+  responsibility: string;
+  role: string;
+  salary: string;
+  waitlist: number[];
+  workerId: string;
 };

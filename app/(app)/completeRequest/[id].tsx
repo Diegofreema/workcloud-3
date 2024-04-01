@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Container } from '@/components/Ui/Container';
 import { HeaderNav } from '@/components/HeaderNav';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useGetSingleWorker } from '@/lib/queries';
+import { useGetWorkerProfile } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { UserPreview } from '@/components/Ui/UserPreview';
@@ -20,20 +20,31 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@clerk/clerk-expo';
 import Toast from 'react-native-toast-message';
 import { useQueryClient } from '@tanstack/react-query';
+import { useData } from '@/hooks/useData';
+import axios from 'axios';
 type Props = {};
 const validationSchema = yup.object().shape({
   role: yup.string().required('Role is required'),
-
   responsibility: yup.string().required('responsibility is required'),
-
   salary: yup.string().required('salary is required'),
 });
 
 const CompleteRequest = (props: Props) => {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { role: workerRole } = useDetailsToAdd();
+
+  const { workspaceId, role: workerRole, orgId } = useDetailsToAdd();
+  console.log(
+    '🚀 ~ CompleteRequest ~ workspaceId',
+    'orgId',
+    workspaceId,
+    workerRole,
+    orgId
+  );
+
   const { onOpen, isOpen, onClose } = useSaved();
-  const { userId, isLoaded } = useAuth();
+  const { id: isMe, user } = useData();
+
+  console.log('🚀 ~ CompleteRequest ~ isMe:', isMe);
   const queryClient = useQueryClient();
   const router = useRouter();
   const {
@@ -44,7 +55,7 @@ const CompleteRequest = (props: Props) => {
     refetch,
     isRefetching,
     isRefetchError,
-  } = useGetSingleWorker(id);
+  } = useGetWorkerProfile(id);
 
   const {
     values,
@@ -64,48 +75,47 @@ const CompleteRequest = (props: Props) => {
     },
     validationSchema,
     onSubmit: async (values) => {
-      const { role, responsibility, salary } = values;
-      const { error } = await supabase.from('requests').insert({
-        role,
-        responsibility,
-        salary,
-        employerId: userId,
-        workerId: id,
-        status: 'pending',
-      });
-      if (error?.code === '23503') {
-        return Toast.show({
-          type: 'error',
-          text1: 'Worker not found',
-          text2: 'Please try with another worker',
+      const { responsibility, salary } = values;
+      try {
+        const { error } = await supabase.from('request').insert({
+          from: isMe,
+          to: data?.worker?.userId?.userId,
+          responsibility,
+          salary,
+          role: workerRole,
+          workspaceId,
+          organizationId: orgId,
         });
-      }
-      if (error) {
+
+        if (!error) {
+          Toast.show({
+            type: 'success',
+            text1: 'Request sent',
+          });
+          queryClient.invalidateQueries({
+            queryKey: ['request'],
+          });
+
+          router.push('/pending-staffs');
+        }
+
+        if (error) {
+          console.log(error);
+          Toast.show({
+            type: 'error',
+            text1: 'Error, failed to send request',
+          });
+        }
+      } catch (error) {
         console.log(error);
-
-        return Toast.show({
-          type: 'error',
-          text1: 'Something went wrong',
-          text2: 'Please try again',
-        });
-      }
-      if (!error) {
-        queryClient.invalidateQueries({
-          queryKey: ['pending_worker'],
-        });
-        resetForm();
-        onOpen();
-      }
-
-      if (error) {
         Toast.show({
           type: 'error',
-          text1: 'Something went wrong',
-          text2: 'Please try again',
+          text1: 'Error, failed to send request',
         });
       }
     },
   });
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isOpen) {
@@ -131,7 +141,7 @@ const CompleteRequest = (props: Props) => {
   }
 
   const { responsibility, role, salary } = values;
-
+  const { worker } = data;
   return (
     <Container>
       <HeaderNav title="Complete Request" />
@@ -142,9 +152,10 @@ const CompleteRequest = (props: Props) => {
       >
         <View style={{ marginTop: 10 }}>
           <UserPreview
-            imageUrl={data?.worker[0]?.imageUrl}
-            name={data?.worker[0]?.name}
-            roleText={data?.worker[0]?.role}
+            imageUrl={worker?.userId?.avatar}
+            name={worker?.userId?.name}
+            roleText={worker?.role}
+            workPlace={worker?.organizationId?.name}
             personal
           />
         </View>

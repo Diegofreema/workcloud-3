@@ -8,37 +8,39 @@ import { MyText } from '../Ui/MyText';
 import { HStack } from '@gluestack-ui/themed';
 import { colors } from '../../constants/Colors';
 import { useSelectRow } from '../../hooks/useSelectRow';
-import { useGetWks } from '../../lib/queries';
-import { LoadingComponent } from '../Ui/LoadingComponent';
-import { ErrorComponent } from '../Ui/ErrorComponent';
-import { useQueryClient } from '@tanstack/react-query';
-import { Wks } from '@/constants/types';
-import { AntDesign, EvilIcons, FontAwesome } from '@expo/vector-icons';
+
+import { EvilIcons, FontAwesome } from '@expo/vector-icons';
 import { useDeleteWks } from '@/hooks/useDeleteWks';
 import { DottedButton } from '../Ui/DottedButton';
+import { EmptyText } from '../EmptyText';
+import { useRouter } from 'expo-router';
+import { Wks } from '@/constants/types';
 
-const links = [
-  {
-    text: 'Customer service',
-  },
-  {
-    text: 'Sales Representative',
-  },
-];
-export const CreateWorkspaceModal = ({ wks }: { wks: Wks[] }) => {
+export const CreateWorkspaceModal = ({ workspace }: { workspace: Wks[] }) => {
   const { isOpen, onClose } = useCreate();
+
   const { onOpen: onSelectRow, onClose: onCloseRow } = useSelectRow();
   const { onOpen: onOpenDelete, getId } = useDeleteWks();
-  const queryClient = useQueryClient();
+  const router = useRouter();
 
   const handleClose = () => {
     onClose();
     onSelectRow();
   };
   const onDelete = (id: any) => {
+    console.log(id);
+
     getId(id);
     onOpenDelete();
     onClose();
+  };
+
+  const handlePress = (item: Wks) => {
+    if (item?.workerId) {
+      router.push(`/wk/${item.workerId}`);
+    } else {
+      router.push(`/staffs/${item.ownerId}`);
+    }
   };
   return (
     <View>
@@ -74,39 +76,35 @@ export const CreateWorkspaceModal = ({ wks }: { wks: Wks[] }) => {
             <FlatList
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={() => (
-                <MyText
-                  style={{ verticalAlign: 'middle' }}
-                  poppins="Medium"
-                  fontSize={16}
-                >
-                  No WKS
-                </MyText>
+                <EmptyText text="No workspaces found" />
               )}
-              data={wks}
+              data={workspace}
               renderItem={({ item }) => (
-                <HStack
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mb={15}
-                  mx={5}
-                >
-                  <MyText fontSize={13} poppins="Medium">
-                    {item?.role}
-                  </MyText>
-                  <Pressable
-                    style={({ pressed }) => [
-                      styles.trash,
-                      { opacity: pressed ? 0.5 : 1 },
-                    ]}
-                    onPress={() => onDelete(item?.id)}
+                <Pressable onPress={() => handlePress(item)}>
+                  <HStack
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={15}
+                    mx={5}
                   >
-                    <EvilIcons
-                      name="trash"
-                      size={24}
-                      color={colors.closeTextColor}
-                    />
-                  </Pressable>
-                </HStack>
+                    <MyText fontSize={13} poppins="Medium">
+                      {item?.role}
+                    </MyText>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.trash,
+                        { opacity: pressed ? 0.5 : 1 },
+                      ]}
+                      onPress={() => onDelete(item?.id)}
+                    >
+                      <EvilIcons
+                        name="trash"
+                        size={24}
+                        color={colors.closeTextColor}
+                      />
+                    </Pressable>
+                  </HStack>
+                </Pressable>
               )}
             />
           </View>

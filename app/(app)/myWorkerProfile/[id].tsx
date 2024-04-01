@@ -1,9 +1,9 @@
 import { StyleSheet, View } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { HStack, ScrollView, VStack } from '@gluestack-ui/themed';
 import { HeaderNav } from '@/components/HeaderNav';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useGetRequests, useGetWorkerProfile } from '@/lib/queries';
+import { useGetWorkerProfile, usePendingWorkers } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { UserPreview } from '@/components/Ui/UserPreview';
@@ -18,22 +18,18 @@ import {
 import { MyText } from '@/components/Ui/MyText';
 import { format } from 'date-fns';
 import Toast from 'react-native-toast-message';
+import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { useChatContext } from 'stream-chat-expo';
+import { useAuth } from '@clerk/clerk-expo';
 import { useData } from '@/hooks/useData';
-import axios from 'axios';
-import { supabase } from '@/lib/supabase';
-import { useDetailsToAdd } from '@/hooks/useDetailsToAdd';
 type Props = {};
 
 const Profile = (props: Props) => {
-  const { profileId } = useLocalSearchParams<{ profileId: string }>();
-  console.log('🚀 ~ Profile ~ profileId:', profileId);
+  const { id } = useData();
+  console.log('🚀 ~ Profile ~ id:', id);
   const { client } = useChatContext();
-  const { user, id } = useData();
 
-  const [cancelling, setCancelling] = useState(false);
-  const [isInPending, setIsInPending] = useState(false);
   const router = useRouter();
   const {
     data,
@@ -43,105 +39,30 @@ const Profile = (props: Props) => {
     refetch,
     isRefetching,
     isRefetchError,
-  } = useGetWorkerProfile(profileId);
-
-  const {
-    data: pendingData,
-    isPending: isPendingData,
-    isError: isErrorData,
-    isPaused: isPausedData,
-    refetch: refetchData,
-    isRefetching: isRefetchingData,
-    isRefetchError: isRefetchErrorData,
-    error,
-  } = useGetRequests(id, profileId);
+  } = useGetWorkerProfile(id);
+  console.log('🚀 ~ Profile ~ data:', data);
 
   const queryClient = useQueryClient();
-  // useEffect(() => {
-  //   if (pendingData?.requestExists?.status === 'pending') {
-  //     setIsInPending(true);
-  //   } else {
-  //     setIsInPending(false);
-  //   }
-  // }, [pendingData]);
-
-  const handleRefetch = () => {
-    refetch();
-    // refetchData();
-  };
   if (isError || isRefetchError || isPaused) {
-    return <ErrorComponent refetch={handleRefetch} />;
+    return <ErrorComponent refetch={refetch} />;
   }
 
   if (isPending) {
     return <LoadingComponent />;
   }
-
-  const startChannel = async () => {
-    const channel = client.channel('messaging', {
-      members: [user?.id as string, profileId],
-    });
-
-    await channel.watch();
-
-    router.push(`/chat/${channel.id}`);
-  };
-
+  console.log(data);
+  const { worker } = data;
   const formattedSkills = (text: string) => {
-    const arrayOfSkills = text?.split(',');
-    const finishedText = arrayOfSkills?.map((skill, index) => (
-      <MyText poppins="Bold" key={index} style={{ color: colors.nine }}>
-        {index + 1}. {skill}
-      </MyText>
+    const arrayOfSkills = text.split(',');
+    const finishedText = arrayOfSkills.map((skill, index) => (
+      <View key={index} style={{ width: '100%' }}>
+        <MyText poppins="Bold" style={{ color: colors.nine }}>
+          {index + 1}. {skill}
+        </MyText>
+      </View>
     ));
     return finishedText;
   };
-  // const sendMessage = () => {};
-  const cancelRequest = async () => {
-    setCancelling(true);
-    try {
-      const { error } = await supabase
-        .from('request')
-        .delete()
-        .eq('from', id)
-        .eq('to', profileId);
-      if (!error) {
-        Toast.show({
-          type: 'success',
-          text1: 'Request Canceled',
-        });
-        queryClient.invalidateQueries({
-          queryKey: ['requests', 'pending_requests', 'workers'],
-        });
-      }
-
-      if (error) {
-        Toast.show({
-          type: 'error',
-          text1: 'Something went wrong',
-        });
-      }
-    } catch (error) {
-      console.log(error);
-
-      Toast.show({
-        type: 'error',
-        text1: 'Something went wrong',
-      });
-    } finally {
-      setCancelling(false);
-    }
-  };
-  const handleRequest = () => {
-    if (!isInPending) {
-      router.push(`/completeRequest/${profileId}`);
-      return;
-    }
-
-    cancelRequest();
-  };
-  const { worker } = data;
-  console.log('🚀 ~ Profile ~ worker:', worker);
 
   return (
     <ScrollView style={{ paddingHorizontal: 20 }}>
@@ -150,33 +71,10 @@ const Profile = (props: Props) => {
         <UserPreview
           imageUrl={worker?.userId?.avatar}
           name={worker?.userId?.name}
-          roleText={worker?.role}
-          workPlace={worker?.organizationId?.name}
+          roleText={worker?.assignedWorkspace}
           personal
-          profile
         />
       </View>
-
-      <HStack gap={20} mt={20}>
-        {worker?.bossId !== id && (
-          <MyButton
-            loading={cancelling}
-            onPress={handleRequest}
-            buttonColor={colors.dialPad}
-            style={{ borderRadius: 8, height: 45 }}
-          >
-            {isInPending ? 'Cancel Request' : 'Send Request'}
-          </MyButton>
-        )}
-        <MyButton
-          onPress={startChannel}
-          buttonColor={colors.lightBlueButton}
-          textColor={colors.dialPad}
-          style={{ borderRadius: 8, height: 45 }}
-        >
-          Send Message
-        </MyButton>
-      </HStack>
 
       <VStack mt={20} gap={15}>
         <HStack gap={5} alignItems="center">
@@ -186,7 +84,7 @@ const Profile = (props: Props) => {
             poppins="Medium"
             style={{ color: colors.grayText }}
           >
-            Joined since {format(worker?.created_at, 'do MMMM yyyy')}
+            Joined since {format(worker.created_at, 'do MMMM yyyy')}
           </MyText>
         </HStack>
         <HStack gap={5} alignItems="center">
@@ -251,9 +149,24 @@ const Profile = (props: Props) => {
             size={24}
             color="black"
           />
-          <VStack gap={5}>{formattedSkills(worker?.skills)}</VStack>
+
+          <VStack gap={5} alignItems="flex-start">
+            {formattedSkills(worker?.skills)}
+          </VStack>
         </HStack>
       </VStack>
+      <View style={{ marginTop: 'auto', gap: 10 }}>
+        <MyButton onPress={() => router.push(`/myWorkerProfile/edit/${id}`)}>
+          <MyText poppins="Bold" style={{ color: colors.white }} fontSize={12}>
+            Edit work profile
+          </MyText>
+        </MyButton>
+        <MyButton onPress={() => router.push(`/requests/${id}`)}>
+          <MyText poppins="Bold" style={{ color: colors.white }} fontSize={12}>
+            Check requests
+          </MyText>
+        </MyButton>
+      </View>
     </ScrollView>
   );
 };

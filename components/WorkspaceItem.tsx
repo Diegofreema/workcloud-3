@@ -5,19 +5,28 @@ import { Text } from 'react-native-paper';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useRouter } from 'expo-router';
 
-export const WorkspaceItem = ({ org }: Organization) => {
-  console.log('🚀 ~ WorkspaceItem ~ org:', org);
-
+export const WorkspaceItem = ({
+  avatar,
+  name,
+  ownerId,
+}: {
+  avatar: string;
+  name: string;
+  ownerId?: string;
+}) => {
+  console.log('🚀 ~ WorkspaceItem ~ avatar, name:', avatar, name, ownerId);
   const { darkMode } = useDarkMode();
   const router = useRouter();
   return (
     <Pressable
-      /* @ts-ignore */
-      onPress={() => router.push(`/(organization)/${org._id}`)}
+      onPress={() =>
+        /* @ts-ignore */
+        router.push(`/(organization)/${ownerId}`)
+      }
       style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}
     >
       <Image
-        source={{ uri: org?.avatar }}
+        source={{ uri: avatar }}
         style={{
           width: 50,
           height: 50,
@@ -35,7 +44,7 @@ export const WorkspaceItem = ({ org }: Organization) => {
           textTransform: 'capitalize',
         }}
       >
-        {org?.organizationName}
+        {name}
       </Text>
     </Pressable>
   );

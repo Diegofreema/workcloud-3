@@ -1,6 +1,6 @@
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { useGetPersonalWorkers } from '@/lib/queries';
+import { useGetMyStaffs, useGetPersonalWorkers } from '@/lib/queries';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
@@ -9,11 +9,14 @@ import { MyText } from '@/components/Ui/MyText';
 import { colors } from '@/constants/Colors';
 import { Pressable } from 'react-native';
 import { DottedButton } from '@/components/Ui/DottedButton';
-import { Workers } from '@/constants/types';
+import { WorkType, Workers } from '@/constants/types';
 import { AddStaff } from '@/components/Dialogs/AddStaff';
 import { useAddStaff } from '@/hooks/useAddStaff';
 import { SelectNewRow } from '@/components/Dialogs/SelectNewRow';
 import { HStack } from '@gluestack-ui/themed';
+import { WorkerProfileArray } from '../../../constants/types';
+import { UserPreview } from '@/components/Ui/UserPreview';
+import { EmptyText } from '@/components/EmptyText';
 
 type Props = {};
 const allRoles = [
@@ -26,7 +29,8 @@ const allRoles = [
 ];
 const Staffs = (props: Props) => {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [workers, setWorkers] = useState<Workers[] | undefined>([]);
+  const [selectId, setSelectId] = useState('');
+  const [workers, setWorkers] = useState<WorkType[]>();
   const { onClose, onOpen } = useAddStaff();
   const [role, setRole] = useState('All');
   const router = useRouter();
@@ -38,7 +42,9 @@ const Staffs = (props: Props) => {
     refetch,
     isRefetching,
     isRefetchError,
-  } = useGetPersonalWorkers(id);
+  } = useGetMyStaffs(id);
+  console.log('🚀 ~ Staffs ~ data:', data);
+
   useEffect(() => {
     if (
       !isPending ||
@@ -47,14 +53,15 @@ const Staffs = (props: Props) => {
       !isRefetchError ||
       !isPaused
     ) {
-      setWorkers(data?.worker);
+      setWorkers(data?.staffs);
     }
   }, []);
 
   useEffect(() => {
-    const filterData = data?.worker?.filter((worker) =>
+    const filterData = data?.staffs?.filter((worker) =>
       role === 'All' ? workers : worker.role === role
     );
+    if (!filterData) return;
 
     setWorkers(filterData);
   }, [role]);
@@ -69,7 +76,8 @@ const Staffs = (props: Props) => {
   const pendingStaffs = () => {
     router.push('/pending-staffs');
   };
-
+  const { staffs } = data;
+  console.log('🚀 ~ Staffs ~ wks:', staffs[0]);
   return (
     <View style={styles.container}>
       <AddStaff />
@@ -116,16 +124,16 @@ const Staffs = (props: Props) => {
         onRefresh={refetch}
         refreshing={isRefetching}
         data={workers}
-        renderItem={({ item }) => <Text>{item.name}</Text>}
-        ListEmptyComponent={() => (
-          <MyText
-            poppins="Bold"
-            style={{ verticalAlign: 'middle' }}
-            fontSize={20}
-          >
-            No Staffs yet
-          </MyText>
+        renderItem={({ item }) => (
+          <UserPreview
+            id={item?.id}
+            imageUrl={item?.userId?.avatar}
+            name={item?.userId?.name}
+            subText={item?.role}
+            navigate
+          />
         )}
+        ListEmptyComponent={() => <EmptyText text={'No staffs found'} />}
       />
     </View>
   );

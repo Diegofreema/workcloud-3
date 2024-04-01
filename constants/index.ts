@@ -4,27 +4,27 @@ export const defaultStyle = {
 
 export const days = [
   {
-    label: 'Sunday',
+    key: 'Sunday',
     value: 'sunday',
   },
   {
-    label: 'Monday',
+    key: 'Monday',
     value: 'monday',
   },
   {
-    label: 'Tuesday',
+    key: 'Tuesday',
     value: 'tuesday',
   },
   {
-    label: 'Wednesday',
+    key: 'Wednesday',
     value: 'wednesday',
   },
   {
-    label: 'Thursday',
+    key: 'Thursday',
     value: 'thursday',
   },
   {
-    label: 'Friday',
+    key: 'Friday',
     value: 'friday',
   },
   {

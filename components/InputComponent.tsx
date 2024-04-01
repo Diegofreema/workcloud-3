@@ -57,11 +57,13 @@ export const InputComponent = ({
         placeholderTextColor={'black'}
         style={{
           backgroundColor: '#E9E9E9',
+          flex: 1,
         }}
         contentStyle={{
           color: 'black',
           fontFamily: fontFamily.Medium,
           fontSize: 13,
+          flex: 1,
         }}
         right={
           password && (

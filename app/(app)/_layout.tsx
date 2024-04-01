@@ -44,7 +44,7 @@ export default function AppLayout() {
       client.disconnectUser();
       console.log('User disconnected');
     };
-  }, []);
+  }, [client, user]);
 
   const chatTheme: DeepPartial<Theme> = {
     channelPreview: {

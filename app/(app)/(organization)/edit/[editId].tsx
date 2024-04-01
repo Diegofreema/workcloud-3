@@ -2,147 +2,82 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import * as yup from 'yup';
 import RNPickerSelect from 'react-native-picker-select';
-import dateFormat from 'dateformat';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { FileObject } from '@supabase/storage-js';
 import * as ImagePicker from 'expo-image-picker';
-import { decode } from 'base64-arraybuffer';
-import * as FileSystem from 'expo-file-system';
 import { Button } from 'react-native-paper';
 import { useFormik } from 'formik';
-import { useUser } from '@clerk/clerk-expo';
 import Toast from 'react-native-toast-message';
-
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { SelectList } from 'react-native-dropdown-select-list';
+import { FontAwesome } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDarkMode } from '../../../../hooks/useDarkMode';
-import { supabase } from '../../../../lib/supabase';
 import { days, defaultStyle } from '../../../../constants';
 import { AuthHeader } from '../../../../components/AuthHeader';
 import { InputComponent } from '../../../../components/InputComponent';
 import { colors } from '../../../../constants/Colors';
-import { Organization } from '../../../../constants/types';
+import axios from 'axios';
+import { format } from 'date-fns';
+import { updateOrg } from '@/lib/helper';
+import { supabase } from '@/lib/supabase';
+import { Organization } from '@/constants/types';
+import { ErrorComponent } from '@/components/Ui/ErrorComponent';
+import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 const validationSchema = yup.object().shape({
-  organization_name: yup.string().required('Name of organization is required'),
+  organizationName: yup.string().required('Name of organization is required'),
   category: yup.string().required('Category is required'),
   location: yup.string().required('Location is required'),
   description: yup.string().required('Description is required'),
   startDay: yup.string().required('Working days are required'),
   endDay: yup.string().required('Working days are required'),
-
-  website_url: yup.string().required('Website link is required'),
+  startTime: yup.string().required('Working time is required'),
+  endTime: yup.string().required('Working time is required'),
+  websiteUrl: yup.string().required('Website link is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
 });
 
 type Props = {};
 
 const Edit = (props: Props) => {
-  const [startTime, setStartTime] = useState(new Date(1598051730000));
-  const [endTime, setEndTime] = useState(new Date(1598051730000));
-  const [imagePath, setImagePath] = useState('');
-  const [imageName, setImageName] = useState<ArrayBuffer>();
-  const [imageType, setImageType] = useState('');
+  const [start, setStartTime] = useState(new Date(1598051730000));
+  const [end, setEndTime] = useState(new Date(1598051730000));
+  const [error, setError] = useState(false);
+  const [organization, setOrganization] = useState();
   const [image, setImage] = useState<string>('');
-  console.log('🚀 ~ Edit ~ image:', image);
-  const { isLoaded, isSignedIn, user } = useUser();
-  const { editId } = useLocalSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
+  const { editId } = useLocalSearchParams<{ editId: string; id: string }>();
+
   const [show, setShow] = useState(false);
   const [show2, setShow2] = useState(false);
+  const [orgId, setOrgId] = useState('');
   const { darkMode } = useDarkMode();
   const router = useRouter();
-  const [file, setFile] = useState<FileObject[]>([]);
+
   const queryClient = useQueryClient();
-  const id = editId as string;
-  useEffect(() => {
-    loadImage(imagePath);
-  }, [imagePath, imageName, imageType]);
-  const loadImage = async (filePath: any) => {
-    const { data } = supabase.storage
-      .from('organizations')
-      .getPublicUrl(`${imagePath}/${imageName}.${imageType}`);
-    const finalImageUrl = data.publicUrl.split('/').slice(0, -1).join('/');
-
-    setImage(finalImageUrl);
-  };
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      Toast.show({
-        type: 'error',
-        text1: 'Unauthorized',
-        text2: 'Please login to continue',
-      });
-      router.push('/login');
-      return;
-    }
-  }, []);
-
-  useEffect(() => {
-    const checkIfBoarded = async () => {
-      const { data, error } = await supabase
-        .from('profile')
-        .select('user_id')
-        .eq('user_id', user?.id);
-      console.log(data);
-
-      if (isSignedIn && !data?.length) {
-        router.push('/board');
-        return Toast.show({
-          type: 'error',
-          text1: 'Unauthorized',
-          text2: 'Please complete your profile to continue',
-        });
-      }
-    };
-    checkIfBoarded();
-  }, []);
 
   const onSelectImage = async () => {
     const options: ImagePicker.ImagePickerOptions = {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
+      base64: true,
     };
 
     const result = await ImagePicker.launchImageLibraryAsync(options);
 
     // Save image if not cancelled
     if (!result.canceled) {
-      const img = result.assets[0];
+      const base64 = `data:image/png;base64,${result.assets[0].base64}`;
 
-      const base64 = await FileSystem.readAsStringAsync(img.uri, {
-        encoding: 'base64',
-      });
-      const filePath = `${Math.random()}/${new Date().getTime()}.${
-        img.type === 'image' ? 'png' : 'mp4'
-      }`;
-      const contentType = img.type === 'image' ? 'image/png' : 'video/mp4';
-
-      const { error } = await supabase.storage
-        .from('organizations')
-        .upload(filePath, decode(base64), { contentType });
-      setImagePath(filePath);
-      setImageName(decode(base64));
-      setImageType(contentType);
-      loadImage(filePath);
-      if (error) {
-        console.log(error);
-      }
+      setImage(base64);
     }
-  };
-
-  const onRemove = async () => {
-    const { data, error } = await supabase.storage
-      .from('organizations')
-      .remove([`${imagePath}/${imageName}.${imageType}`]);
-    setImage('');
   };
 
   const {
     values,
     handleChange,
-    handleBlur,
+
     handleSubmit,
     isSubmitting,
     errors,
@@ -152,113 +87,115 @@ const Edit = (props: Props) => {
   } = useFormik({
     initialValues: {
       email: '',
-      organization_name: '',
+      organizationName: '',
       category: '',
       startDay: '',
       endDay: '',
       description: '',
       location: '',
-      website_url: '',
+      websiteUrl: '',
+      startTime: '',
+      endTime: '',
     },
     validationSchema,
     onSubmit: async (values) => {
-      const {
-        email,
-        category,
-        endDay,
-        location,
-        organization_name,
-        startDay,
-        description,
-        website_url,
-      } = values;
-
-      if (!image.includes('png') && !image.includes('jpg')) {
-        return Toast.show({
-          type: 'error',
-          text1: 'Please upload an image',
-        });
-      }
+      // @ts-ignore
       const { error } = await supabase
-        .from('workspace')
+        .from('organization')
         .update({
-          organization_name: organization_name,
-          category,
-          description,
-          email,
-          closing_time: endTime,
-          work_days: `${startDay} - ${endDay}`,
-          website: website_url,
-          location,
-          opening_time: startTime,
-          owner_id: user?.id,
-          image_url: image.includes('ArrayBuffer')
-            ? image.split('/').slice(0, -1).join('/')
-            : image,
+          name: values.organizationName,
+          category: values.category,
+          description: values.description,
+          avatar: image,
+          email: values.email,
+          location: values.location,
+          start: values.startTime,
+          end: values.endTime,
+          website: values.websiteUrl,
+          workDays: values.startDay + ' - ' + values.endDay,
         })
-        .eq('id', id.replace(')', ''));
+        .eq('id', orgId);
 
       if (!error) {
+        resetForm();
         Toast.show({
           type: 'success',
           text1: 'Success',
           text2: 'Organization updated successfully',
+          position: 'bottom',
         });
-        queryClient.invalidateQueries({ queryKey: ['organizations'] });
-        router.push('/workspace');
-        return;
+        queryClient.invalidateQueries({
+          queryKey: ['organizations', 'organization'],
+        });
+
+        // @ts-ignore
+        router.replace(`/(organization)/${editId}`);
       }
+
       if (error) {
         console.log(error);
 
-        return Toast.show({
+        Toast.show({
           type: 'error',
-          text1: 'Error',
-          text2: error.message,
+          text1: 'Something went wrong',
+          text2: 'Please try again',
+          position: 'bottom',
         });
       }
+      return;
     },
   });
-  useEffect(() => {
-    const getWorkspace = async () => {
+  const getOrgs = async () => {
+    setIsLoading(true);
+    setError(false);
+    try {
       const { data, error } = await supabase
-        .from('workspace')
-        .select()
-        .eq('id', id.replace(')', ''));
-      console.log(id);
-
-      if (error) {
-        return console.log(error);
+        .from('organization')
+        .select('*')
+        .eq('id', editId)
+        .single();
+      if (!error) {
+        setValues({
+          ...values,
+          email: data?.email,
+          category: data?.category,
+          endDay: data?.end,
+          location: data?.location,
+          organizationName: data?.name,
+          startDay: data?.start,
+          description: data?.description,
+          websiteUrl: data?.website,
+          startTime: data?.workDays.split(' - ')[0],
+          endTime: data?.workDays.split(' - ')[1],
+        });
+        setOrgId(data?.id);
+        setImage(data?.avatar);
       }
 
-      console.log(data);
-      const orgs: Organization = data[0];
-      setValues({
-        category: orgs.category,
-        description: orgs.description,
-        email: orgs.email,
-        organization_name: orgs.organization_name,
-        location: orgs.location,
-        website_url: orgs.website,
-        endDay: orgs.work_days.split(' - ')[1],
-        startDay: orgs.work_days.split(' - ')[0],
-      });
-      setStartTime(new Date(orgs.opening_time));
-      setEndTime(new Date(orgs.closing_time));
-      setImage(orgs.image_url);
-    };
-    getWorkspace();
+      if (error) {
+        setError(true);
+      }
+    } catch (error) {
+      console.log(error);
+      setError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
+    getOrgs();
   }, []);
-  console.log(image);
 
   const onChange = (event: any, selectedDate: any, type: string) => {
     const currentDate = selectedDate;
     if (type === 'startTime') {
       setShow(false);
       setStartTime(currentDate);
+      setValues({ ...values, startTime: format(currentDate, 'HH:mm') });
     } else {
       setShow2(false);
       setEndTime(currentDate);
+      setValues({ ...values, endTime: format(currentDate, 'HH:mm') });
     }
   };
   const showMode = () => {
@@ -272,14 +209,22 @@ const Edit = (props: Props) => {
     category,
     endDay,
     location,
-    organization_name,
+    organizationName,
     startDay,
     description,
-    website_url,
+    websiteUrl,
+    startTime,
+    endTime,
   } = values;
-  const imgUrl = image.includes('ArrayBuffer')
-    ? image.split('/').slice(0, -1).join('/')
-    : image;
+
+  if (error) {
+    return <ErrorComponent refetch={getOrgs} />;
+  }
+  if (isLoading) {
+    return <LoadingComponent />;
+  }
+  console.log(organization);
+
   return (
     <ScrollView
       style={[defaultStyle, { flex: 1 }]}
@@ -291,79 +236,53 @@ const Edit = (props: Props) => {
       <View style={{ marginTop: 20, flex: 1 }}>
         <View style={{ flex: 0.6, gap: 10 }}>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            {image.includes('png') || image.includes('jpg') ? (
-              <View
+            <View
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: 50,
+              }}
+            >
+              <Image
+                contentFit="cover"
+                style={{ width: 100, height: 100, borderRadius: 50 }}
+                source={image}
+              />
+              <TouchableOpacity
                 style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 3,
+                  backgroundColor: darkMode ? 'white' : 'black',
+                  padding: 5,
+                  borderRadius: 30,
+                  height: 30,
+                  width: 30,
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
+                onPress={onSelectImage}
               >
-                <Image
-                  contentFit="cover"
-                  style={{ width: 100, height: 100, borderRadius: 50 }}
-                  source={imgUrl}
+                <FontAwesome
+                  name="plus"
+                  size={20}
+                  color={darkMode ? 'black' : 'white'}
                 />
-                <TouchableOpacity
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 3,
-                    backgroundColor: darkMode ? 'white' : 'black',
-                    padding: 5,
-                    borderRadius: 30,
-                  }}
-                  onPress={onRemove}
-                >
-                  <Ionicons
-                    name="trash-outline"
-                    size={20}
-                    color={darkMode ? 'black' : 'white'}
-                  />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <View
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: 50,
-
-                  backgroundColor: 'gray',
-                }}
-              >
-                <TouchableOpacity
-                  style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    right: 3,
-                    backgroundColor: darkMode ? 'white' : 'black',
-                    padding: 5,
-                    borderRadius: 30,
-                  }}
-                  onPress={onSelectImage}
-                >
-                  <FontAwesome
-                    name="plus"
-                    size={20}
-                    color={darkMode ? 'black' : 'white'}
-                  />
-                </TouchableOpacity>
-              </View>
-            )}
+              </TouchableOpacity>
+            </View>
           </View>
 
           <>
             <InputComponent
               label="Organization Name"
-              value={organization_name}
-              onChangeText={handleChange('organization_name')}
+              value={organizationName}
+              onChangeText={handleChange('organizationName')}
               placeholder="Organization Name"
               keyboardType="default"
             />
-            {touched.organization_name && errors.organization_name && (
+            {touched.organizationName && errors.organizationName && (
               <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                {errors.organization_name}
+                {errors.organizationName}
               </Text>
             )}
           </>
@@ -413,14 +332,14 @@ const Edit = (props: Props) => {
           <>
             <InputComponent
               label="Website Link"
-              value={website_url}
-              onChangeText={handleChange('website_url')}
+              value={websiteUrl}
+              onChangeText={handleChange('websiteUrl')}
               placeholder="Website link"
               keyboardType="default"
             />
-            {touched.website_url && errors.website_url && (
+            {touched.websiteUrl && errors.websiteUrl && (
               <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                {errors.website_url}
+                {errors.websiteUrl}
               </Text>
             )}
           </>
@@ -439,121 +358,98 @@ const Edit = (props: Props) => {
             )}
           </>
           <>
-            <Text
-              style={{
-                marginBottom: 5,
-                fontFamily: 'PoppinsBold',
-                fontSize: 12,
-              }}
-            >
+            <Text style={{ marginBottom: 5, fontFamily: 'PoppinsMedium' }}>
               Work Days
             </Text>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
-              <>
-                <View style={styles2.border}>
-                  <RNPickerSelect
-                    value={startDay}
-                    onValueChange={handleChange('startDay')}
-                    items={days}
-                    style={styles}
-                  />
-                </View>
-                {touched.startDay && errors.startDay && (
-                  <Text
-                    style={{
-                      color: 'red',
-
-                      fontFamily: 'PoppinsBold',
-                      fontSize: 12,
-                    }}
-                  >
-                    {errors.startDay}
-                  </Text>
-                )}
-              </>
-              <>
-                <View style={styles2.border}>
-                  <RNPickerSelect
-                    value={endDay}
-                    onValueChange={handleChange('endDay')}
-                    items={days}
-                    style={styles}
-                  />
-                </View>
-                {touched.endDay && errors.endDay && (
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                    {errors.endDay}
-                  </Text>
-                )}
-              </>
-            </View>
-          </>
-          <>
-            <Text
+            <View
               style={{
-                marginBottom: 5,
-
-                fontFamily: 'PoppinsBold',
-                fontSize: 12,
+                flexDirection: 'row',
+                gap: 10,
+                width: '100%',
               }}
             >
-              Opening And Closing Time
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
               <>
-                <Pressable onPress={showMode} style={styles2.border}>
-                  <Text style={{ fontFamily: 'PoppinsLight', fontSize: 12 }}>
-                    {' '}
-                    {`${
-                      dateFormat(startTime, 'HH:MM') || ' Opening Time'
-                    }`}{' '}
-                  </Text>
-                </Pressable>
-                {/* {touched.date && errors.date && (
-              <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                {errors.date}
-              </Text>
-            )} */}
-
-                {show && (
-                  <DateTimePicker
-                    testID="dateTimePicker"
-                    value={startTime}
-                    mode={'time'}
-                    is24Hour={true}
-                    onChange={(event, selectedDate) =>
-                      onChange(event, selectedDate, 'startTime')
-                    }
-                  />
-                )}
+                <SelectList
+                  search={false}
+                  boxStyles={{
+                    ...styles2.border,
+                    width: '100%',
+                  }}
+                  inputStyles={{
+                    textAlign: 'left',
+                    fontSize: 14,
+                    borderWidth: 0,
+                  }}
+                  fontFamily="PoppinsMedium"
+                  setSelected={handleChange('gender')}
+                  data={days}
+                  defaultOption={{ key: 'monday', value: 'Monday' }}
+                  save="key"
+                  placeholder="Select your state"
+                />
               </>
               <>
-                <Pressable onPress={showMode2} style={styles2.border}>
-                  <Text style={{ fontFamily: 'PoppinsLight', fontSize: 12 }}>
-                    {' '}
-                    {`${dateFormat(endTime, 'HH:MM') || ' Closing Time'}`}{' '}
-                  </Text>
-                </Pressable>
-                {/* {touched.date && errors.date && (
-              <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                {errors.date}
-              </Text>
-            )} */}
-                {show2 && (
-                  <DateTimePicker
-                    testID="dateTimePicker"
-                    value={endTime}
-                    mode={'time'}
-                    is24Hour={true}
-                    onChange={(event, selectedDate) =>
-                      onChange(event, selectedDate, 'endTime')
-                    }
-                  />
-                )}
+                <SelectList
+                  search={false}
+                  boxStyles={{
+                    ...styles2.border,
+                    justifyContent: 'flex-start',
+                    backgroundColor: '#E9E9E9',
+                    width: '100%',
+                  }}
+                  inputStyles={{ textAlign: 'left', fontSize: 14 }}
+                  fontFamily="PoppinsMedium"
+                  setSelected={handleChange('gender')}
+                  data={days}
+                  defaultOption={{ key: 'friday', value: 'Friday' }}
+                  save="key"
+                  placeholder="Select your state"
+                />
               </>
             </View>
           </>
         </View>
+        <>
+          <Text
+            style={{
+              marginBottom: 5,
+              fontFamily: 'PoppinsBold',
+              marginTop: 10,
+            }}
+          >
+            Opening And Closing Time
+          </Text>
+          <View style={{ flexDirection: 'row', gap: 10, width: '100%' }}>
+            <>
+              <InputComponent
+                style={{}}
+                value={values.startTime}
+                onChangeText={handleChange('startTime')}
+                placeholder="Opening"
+                keyboardType="default"
+              />
+
+              {errors.startTime && (
+                <Text style={{ color: 'red', fontWeight: 'bold' }}>
+                  {errors.startTime}
+                </Text>
+              )}
+            </>
+            <>
+              <InputComponent
+                value={values.endTime}
+                onChangeText={handleChange('endTime')}
+                placeholder="Closing Time"
+                keyboardType="default"
+              />
+              {errors.endTime && (
+                <Text style={{ color: 'red', fontWeight: 'bold' }}>
+                  {errors.endTime}
+                </Text>
+              )}
+            </>
+          </View>
+        </>
         <View style={{ flex: 0.4, marginTop: 30 }}>
           <Button
             loading={isSubmitting}

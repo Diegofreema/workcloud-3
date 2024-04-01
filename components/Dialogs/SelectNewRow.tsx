@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Pressable, View, FlatList } from 'react-native';
 
 import Modal from 'react-native-modal';
@@ -11,6 +11,10 @@ import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { FontAwesome } from '@expo/vector-icons';
 import { useDetailsToAdd } from '@/hooks/useDetailsToAdd';
+import axios from 'axios';
+import { Wks } from '@/constants/types';
+import { supabase } from '@/lib/supabase';
+import { useData } from '@/hooks/useData';
 
 const roles = [
   { role: 'Customer service' },
@@ -22,12 +26,38 @@ const roles = [
 export const SelectNewRow = ({ id }: { id: string }) => {
   const { isOpen, onClose } = useSelectNewRow();
   const { getData } = useDetailsToAdd();
+  const { id: userId } = useData();
   const queryClient = useQueryClient();
-  const router = useRouter();
+  const [workspace, setWorkspace] = useState<Wks[]>();
+  console.log('🚀 ~ SelectNewRow ~ workspace:', workspace);
 
-  const navigate = (role: string) => {
+  const router = useRouter();
+  useEffect(() => {
+    const getWks = async () => {
+      const { data, error } = await supabase.from('workspace').select();
+      if (!error) {
+        setWorkspace(data);
+      }
+      return data;
+    };
+    const getWorkspaces = async () => {
+      try {
+        await queryClient.fetchQuery({
+          queryKey: ['wks', userId],
+          queryFn: getWks,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getWorkspaces();
+  }, []);
+
+  const navigate = (item: Wks) => {
+    console.log('🚀 ~ navigate ~ item:', item.organizationId);
+
     onClose();
-    getData(role, id);
+    getData(item.role, item.id, item.organizationId);
     router.push(`/allStaffs`);
   };
 
@@ -43,7 +73,7 @@ export const SelectNewRow = ({ id }: { id: string }) => {
       >
         <View style={styles.centeredView}>
           <MyText poppins="Medium" fontSize={15}>
-            Select your role
+            Select role
           </MyText>
           <Pressable
             style={({ pressed }) => [
@@ -58,12 +88,12 @@ export const SelectNewRow = ({ id }: { id: string }) => {
           <View style={{ marginTop: 20, width: '100%', gap: 14 }}>
             <FlatList
               showsVerticalScrollIndicator={false}
-              data={roles}
+              data={workspace}
               ItemSeparatorComponent={() => <Divider style={styles.divider} />}
               keyExtractor={(item) => item.role}
               renderItem={({ item }) => (
                 <Pressable
-                  onPress={() => navigate(item?.role)}
+                  onPress={() => navigate(item)}
                   style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
                 >
                   <HStack

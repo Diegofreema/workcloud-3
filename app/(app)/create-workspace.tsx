@@ -25,13 +25,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useData } from '@/hooks/useData';
 import { createOrg } from '@/lib/helper';
+import { SelectList } from 'react-native-dropdown-select-list';
 const validationSchema = yup.object().shape({
   organizationName: yup.string().required('Name of organization is required'),
   category: yup.string().required('Category is required'),
   location: yup.string().required('Location is required'),
   description: yup.string().required('Description is required'),
-  startDay: yup.string().required('Working days are required'),
-  endDay: yup.string().required('Working days are required'),
+  startDay: yup.string(),
+  endDay: yup.string(),
   startTime: yup.string().required('Working time is required'),
   endTime: yup.string().required('Working time is required'),
   websiteUrl: yup.string().required('Website link is required'),
@@ -84,8 +85,8 @@ const CreateWorkSpace = (props: Props) => {
       email: '',
       organizationName: '',
       category: '',
-      startDay: '',
-      endDay: '',
+      startDay: 'Monday',
+      endDay: 'Friday',
       description: '',
       location: '',
       websiteUrl: '',
@@ -95,9 +96,23 @@ const CreateWorkSpace = (props: Props) => {
     validationSchema,
     onSubmit: async (values) => {
       // @ts-ignore
-      const data = await createOrg({ ...values, avatar, ownerId: id });
-      console.log('🚀 ~ onSubmit: ~ data:', data);
-      if (data?.orgsId as any) {
+
+      //
+      const { error } = await supabase.from('organization').insert({
+        name: values.organizationName,
+        category: values.category,
+        description: values.description,
+        avatar,
+        ownerId: id,
+        email: values.email,
+        location: values.location,
+        start: values.startTime,
+        end: values.endTime,
+        website: values.websiteUrl,
+        workDays: values.startDay + ' - ' + values.endDay,
+      });
+
+      if (!error) {
         queryClient.invalidateQueries({
           queryKey: ['organizations', 'organization'],
         });
@@ -105,18 +120,20 @@ const CreateWorkSpace = (props: Props) => {
         Toast.show({
           type: 'success',
           text1: 'Success',
-          text2: data?.message,
+          text2: 'Organization created successfully',
           position: 'bottom',
         });
         // @ts-ignore
-        router.replace(`/(organization)/${data.orgsId}`);
+        router.replace(`/(organization)/${id}`);
       }
 
-      if (data?.error) {
+      if (error) {
+        console.log(error);
+
         Toast.show({
           type: 'error',
           text1: 'Something went wrong',
-          text2: data.error,
+          text2: "Couldn't create organization",
           position: 'bottom',
         });
       }
@@ -295,36 +312,50 @@ const CreateWorkSpace = (props: Props) => {
             <Text style={{ marginBottom: 5, fontFamily: 'PoppinsMedium' }}>
               Work Days
             </Text>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: 10,
+                width: '100%',
+              }}
+            >
               <>
-                <View style={styles2.border}>
-                  <RNPickerSelect
-                    value={startDay}
-                    onValueChange={handleChange('startDay')}
-                    items={days}
-                    style={styles}
-                  />
-                </View>
-                {touched.startDay && errors.startDay && (
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                    {errors.startDay}
-                  </Text>
-                )}
+                <SelectList
+                  search={false}
+                  boxStyles={{
+                    ...styles2.border,
+                    width: '100%',
+                  }}
+                  inputStyles={{
+                    textAlign: 'left',
+                    fontSize: 14,
+                    borderWidth: 0,
+                  }}
+                  fontFamily="PoppinsMedium"
+                  setSelected={handleChange('gender')}
+                  data={days}
+                  defaultOption={{ key: 'monday', value: 'Monday' }}
+                  save="key"
+                  placeholder="Select your state"
+                />
               </>
               <>
-                <View style={styles2.border}>
-                  <RNPickerSelect
-                    value={endDay}
-                    onValueChange={handleChange('endDay')}
-                    items={days}
-                    style={styles}
-                  />
-                </View>
-                {touched.endDay && errors.endDay && (
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                    {errors.endDay}
-                  </Text>
-                )}
+                <SelectList
+                  search={false}
+                  boxStyles={{
+                    ...styles2.border,
+                    justifyContent: 'flex-start',
+                    backgroundColor: '#E9E9E9',
+                    width: '100%',
+                  }}
+                  inputStyles={{ textAlign: 'left', fontSize: 14 }}
+                  fontFamily="PoppinsMedium"
+                  setSelected={handleChange('gender')}
+                  data={days}
+                  defaultOption={{ key: 'friday', value: 'Friday' }}
+                  save="key"
+                  placeholder="Select your state"
+                />
               </>
             </View>
           </>
@@ -340,11 +371,6 @@ const CreateWorkSpace = (props: Props) => {
                     {`${format(startTime, 'HH:mm') || ' Opening Time'}`}{' '}
                   </Text>
                 </Pressable>
-                {errors.startTime && (
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                    {errors.startTime}
-                  </Text>
-                )}
 
                 {show && (
                   <DateTimePicker
@@ -365,11 +391,7 @@ const CreateWorkSpace = (props: Props) => {
                     {`${dateFormat(endTime, 'HH:MM') || ' Closing Time'}`}{' '}
                   </Text>
                 </Pressable>
-                {errors.endTime && (
-                  <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                    {errors.endTime}
-                  </Text>
-                )}
+
                 {show2 && (
                   <DateTimePicker
                     testID="dateTimePicker"
@@ -409,7 +431,7 @@ const styles2 = StyleSheet.create({
     minHeight: 52,
     paddingLeft: 15,
     justifyContent: 'center',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderBottomColor: '#DADADA',
     width: '50%',
   },
