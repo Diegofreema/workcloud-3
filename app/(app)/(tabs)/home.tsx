@@ -37,7 +37,7 @@ import { Item } from '@/components/Item';
 export default function TabOneScreen() {
   const router = useRouter();
   const { user: profile, id } = useData();
-  console.log('🚀 ~ TabOneScreen ~ id:', id);
+  // console.log('🚀 ~ TabOneScreen ~ id:', id);
 
   const { data, refetch, isPaused, isPending, isError, isRefetching } =
     useProfile(profile?.id as string);
@@ -59,7 +59,7 @@ export default function TabOneScreen() {
     // refetchWorkerProfile();
     // refetchOrgs();
   };
-  console.log(data?.profile?.workerId?.id);
+  console.log(data?.profile?.workerId?.id, data?.profile?.organizationId?.id);
 
   useEffect(() => {
     if (!data?.profile?.organizationId?.id && !data?.profile?.workerId?.id) {

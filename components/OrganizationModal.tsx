@@ -11,7 +11,6 @@ import { useData } from '@/hooks/useData';
 type Props = {};
 
 export const OrganizationModal = ({}: Props): JSX.Element => {
-  const { user } = useData();
   const { isOpen, onClose } = useOrganizationModal();
   const router = useRouter();
 
@@ -35,9 +34,9 @@ export const OrganizationModal = ({}: Props): JSX.Element => {
           <MyText
             poppins="Bold"
             fontSize={20}
-            style={{ verticalAlign: 'middle' }}
+            style={{ textAlign: 'center', marginTop: 15 }}
           >
-            Hi {user?.name || ''}
+            Hi, start your journey on workcloud
           </MyText>
           <Pressable
             onPress={onClose}
@@ -58,13 +57,6 @@ export const OrganizationModal = ({}: Props): JSX.Element => {
           }}
         />
         <Dialog.Content style={{ padding: 10, alignItems: 'center' }}>
-          <MyText
-            poppins="Medium"
-            fontSize={15}
-            style={{ width: '100%', verticalAlign: 'middle' }}
-          >
-            Start your journey on workcloud
-          </MyText>
           <View style={{ gap: 15, marginTop: 20 }}>
             <Button
               buttonColor={colors.buttonBlue}

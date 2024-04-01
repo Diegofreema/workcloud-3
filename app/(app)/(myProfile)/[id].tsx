@@ -59,6 +59,7 @@ const MyProfile = (props: Props) => {
   if (loading) {
     return <LoadingComponent />;
   }
+  const assignedWk = user?.workerId?.workspaceId ? 1 : 0;
   return (
     <View style={{ flex: 1 }}>
       <View style={defaultStyle}>
@@ -69,6 +70,8 @@ const MyProfile = (props: Props) => {
         name={user?.name}
         image={user?.avatar}
         ownedWks={numberOfWorkspace}
+        assignedWk={assignedWk}
+        workspaceId={user?.workerId?.id}
       />
       <View style={{ marginTop: 20, ...defaultStyle }}>
         <MiddleCard />

@@ -60,8 +60,8 @@ export const HeaderNav = ({
             <Text
               style={{
                 color: colors.grayText,
-                fontFamily: 'PoppinsLight',
-                fontSize: 8,
+                fontFamily: 'PoppinsMedium',
+                fontSize: 12,
                 marginTop: -8,
               }}
             >

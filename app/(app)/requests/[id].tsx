@@ -22,7 +22,7 @@ const Requests = (props: Props) => {
     isRefetching,
     isRefetchError,
   } = usePendingRequest(id);
-  console.log('🚀 ~ Requests ~ data:', data?.requestsList[0]?._id);
+
   if (isError || isRefetchError || isPaused || data?.error) {
     return <ErrorComponent refetch={refetch} />;
   }
@@ -31,6 +31,7 @@ const Requests = (props: Props) => {
     return <LoadingComponent />;
   }
   // 6602c083d9c51008cb52b02c
+  const { requests } = data;
   return (
     <Container>
       <HeaderNav title="Pending Requests" />
@@ -42,17 +43,17 @@ const Requests = (props: Props) => {
         refreshing={isRefetching}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 50 }}
-        data={data?.requestsList}
+        data={requests}
         renderItem={({ item }) => (
           <WorkPreview
-            imageUrl={item?.from?.organizations?.avatar.url}
-            name={item?.from?.organizations.organizationName}
-            subText={item?.status}
-            id={item?._id}
+            imageUrl={item?.from?.organizationId?.avatar}
+            name={item?.from?.organizationId?.name}
+            subText={item?.pending}
+            id={item?.id}
             navigate
           />
         )}
-        keyExtractor={(item) => item?._id.toString()}
+        keyExtractor={(item) => item?.id.toString()}
       />
     </Container>
   );

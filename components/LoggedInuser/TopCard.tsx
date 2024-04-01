@@ -13,14 +13,23 @@ type Props = {
   image?: string;
   name?: string | null;
   ownedWks?: number;
+  assignedWk?: any;
+  workspaceId?: number;
 };
 
-export const TopCard = ({ image, name, ownedWks }: Props): JSX.Element => {
+export const TopCard = ({
+  image,
+  name,
+  ownedWks,
+  assignedWk,
+  workspaceId,
+}: Props): JSX.Element => {
   const router = useRouter();
   const { id } = useData();
-  const handleNavigate = () => {
-    router.push(`/edit-profile/${id}`);
-    console.log('pressed');
+  const navigate = () => {
+    if (!workspaceId) return;
+
+    router.replace(`/wk/${workspaceId}`);
   };
   return (
     <View>
@@ -34,12 +43,20 @@ export const TopCard = ({ image, name, ownedWks }: Props): JSX.Element => {
               {ownedWks}
             </MyText>
           </VStack>
-          <VStack justifyContent="center" alignItems="center">
-            <MyText poppins="Medium">Assigned WS</MyText>
-            <MyText poppins="Bold" fontSize={14}>
-              20
-            </MyText>
-          </VStack>
+          <Pressable
+            onPress={navigate}
+            style={({ pressed }) => [
+              { paddingHorizontal: 4, opacity: pressed ? 0.5 : 1 },
+            ]}
+          >
+            <VStack justifyContent="center" alignItems="center">
+              <MyText poppins="Medium">Assigned WS</MyText>
+              <MyText poppins="Bold" fontSize={14}>
+                {assignedWk}
+              </MyText>
+            </VStack>
+          </Pressable>
+
           <Link href="/edit-profile" asChild>
             <Pressable
               style={{

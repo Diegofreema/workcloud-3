@@ -55,25 +55,25 @@ const Profile = (props: Props) => {
     isRefetchError: isRefetchErrorData,
     error,
   } = useGetRequests(id, profileId);
+  console.log(pendingData, 'Pending Data');
 
   const queryClient = useQueryClient();
-  // useEffect(() => {
-  //   if (pendingData?.requestExists?.status === 'pending') {
-  //     setIsInPending(true);
-  //   } else {
-  //     setIsInPending(false);
-  //   }
-  // }, [pendingData]);
-
+  useEffect(() => {
+    if (pendingData?.request?.pending === true) {
+      setIsInPending(true);
+    } else {
+      setIsInPending(false);
+    }
+  }, [pendingData]);
   const handleRefetch = () => {
     refetch();
-    // refetchData();
+    refetchData();
   };
-  if (isError || isRefetchError || isPaused) {
+  if (isError || isRefetchError || isErrorData || isPaused || isPausedData) {
     return <ErrorComponent refetch={handleRefetch} />;
   }
 
-  if (isPending) {
+  if (isPending || isPendingData) {
     return <LoadingComponent />;
   }
 
@@ -103,15 +103,15 @@ const Profile = (props: Props) => {
       const { error } = await supabase
         .from('request')
         .delete()
-        .eq('from', id)
-        .eq('to', profileId);
+        .eq('id', pendingData.request.id);
+
       if (!error) {
         Toast.show({
           type: 'success',
           text1: 'Request Canceled',
         });
         queryClient.invalidateQueries({
-          queryKey: ['requests', 'pending_requests', 'workers'],
+          queryKey: ['request', id, profileId],
         });
       }
 
@@ -132,6 +132,9 @@ const Profile = (props: Props) => {
       setCancelling(false);
     }
   };
+
+  const { worker } = data;
+
   const handleRequest = () => {
     if (!isInPending) {
       router.push(`/completeRequest/${profileId}`);
@@ -140,9 +143,6 @@ const Profile = (props: Props) => {
 
     cancelRequest();
   };
-  const { worker } = data;
-  console.log('🚀 ~ Profile ~ worker:', worker);
-
   return (
     <ScrollView style={{ paddingHorizontal: 20 }}>
       <HeaderNav title="Profile" />

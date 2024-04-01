@@ -2,15 +2,16 @@ import { Workers } from '@/constants/types';
 import { HStack, VStack } from '@gluestack-ui/themed';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { MyText } from './MyText';
 import organizations from '../../app/(app)/(organization)/organizations';
+import { colors } from '@/constants/Colors';
 
 type PreviewWorker = {
   name: any;
   imageUrl?: string;
 
-  subText?: string;
+  subText?: string | boolean;
   id?: any;
   navigate?: boolean;
   roleText?: string;
@@ -19,6 +20,8 @@ type PreviewWorker = {
   hide?: boolean;
   workPlace?: string;
   profile?: boolean;
+  active?: boolean;
+  workspace?: boolean;
 };
 export const UserPreview = ({
   id,
@@ -32,6 +35,8 @@ export const UserPreview = ({
   hide,
   workPlace,
   profile,
+  active,
+  workspace,
 }: PreviewWorker) => {
   const router = useRouter();
   const onPress = () => {
@@ -54,7 +59,7 @@ export const UserPreview = ({
           </MyText>
           {subText && (
             <MyText poppins="Medium" fontSize={14}>
-              {subText}
+              {subText === true ? 'pending' : subText}
             </MyText>
           )}
           {roleText && (
@@ -67,6 +72,43 @@ export const UserPreview = ({
             <MyText poppins="Medium" fontSize={14}>
               Currently not with an organization
             </MyText>
+          )}
+          {active && workspace && (
+            <View
+              style={{
+                backgroundColor: colors.openTextColor,
+                borderRadius: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <MyText
+                poppins="Medium"
+                fontSize={14}
+                style={{ color: colors.openBackgroundColor }}
+              >
+                Active
+              </MyText>
+            </View>
+          )}
+
+          {!active && workspace && (
+            <View
+              style={{
+                backgroundColor: colors.closeTextColor,
+                borderRadius: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <MyText
+                style={{ color: colors.closeBackgroundColor }}
+                poppins="Medium"
+                fontSize={14}
+              >
+                Inactive
+              </MyText>
+            </View>
           )}
         </VStack>
       </HStack>
@@ -105,7 +147,7 @@ export const WorkPreview = ({
           </MyText>
           {subText && (
             <MyText poppins="Medium" fontSize={14}>
-              {subText}
+              {subText === true && 'pending'}
             </MyText>
           )}
           {roleText && (

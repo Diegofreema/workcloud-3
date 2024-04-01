@@ -1,4 +1,4 @@
-import { StyleProp, ViewStyle } from 'react-native';
+import { StyleProp, TextStyle, ViewStyle } from 'react-native';
 import { ButtonProps, Button } from 'react-native-paper';
 import { colors } from '../../constants/Colors';
 import { fontFamily } from '../../constants/index';
@@ -9,6 +9,7 @@ type Props = ButtonProps & {
   buttonColor?: string;
   textColor?: string;
   style?: StyleProp<ViewStyle>;
+  labelStyle?: StyleProp<TextStyle>;
 };
 
 export const MyButton = ({
@@ -17,13 +18,14 @@ export const MyButton = ({
   buttonColor = colors.dialPad,
   textColor = 'white',
   style,
+  labelStyle,
   ...props
 }: Props): JSX.Element => {
   return (
     <Button
       {...props}
       rippleColor={colors.ripple}
-      contentStyle={[{ padding: 5 }, contentStyle]}
+      contentStyle={[contentStyle]}
       textColor={textColor}
       buttonColor={buttonColor}
       style={[
@@ -32,10 +34,15 @@ export const MyButton = ({
         },
         style,
       ]}
-      labelStyle={{
-        fontFamily: fontFamily.Medium,
-        fontSize: 14,
-      }}
+      labelStyle={[
+        {
+          fontFamily: fontFamily.Medium,
+          fontSize: 14,
+
+          width: '100%',
+        },
+        labelStyle,
+      ]}
     >
       {children}
     </Button>

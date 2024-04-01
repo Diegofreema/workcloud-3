@@ -15,6 +15,7 @@ import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
 import Toast from 'react-native-toast-message';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 
 type Props = {};
 
@@ -30,10 +31,10 @@ const Request = (props: Props) => {
     refetch,
     isRefetching,
     isRefetchError,
+    error: er,
   } = useGetRequest(requestId);
   const [cancelling, setCancelling] = useState(false);
   const [accepting, setAccepting] = useState(false);
-  console.log('🚀 ~ Request ~ data:', data?.requestExists?.workspaceId);
 
   if (isError || isRefetchError || isPaused || data?.error) {
     return <ErrorComponent refetch={refetch} />;
@@ -43,41 +44,52 @@ const Request = (props: Props) => {
     return <LoadingComponent />;
   }
 
-  console.log(data?.requestExists?.workspaceId);
-
-  const { requestExists } = data;
+  const { request } = data;
   const acceptRequest = async () => {
     setAccepting(true);
     try {
-      const { data: res } = await axios.post(
-        `http://192.168.240.212:3000/workspace/assign`,
-        {
-          workspaceId: data?.requestExists?.workspaceId,
-          id: id,
-          salary: requestExists?.salary,
-          responsibilities: requestExists?.responsibility,
-          requestId: requestExists?._id,
-          bossId: requestExists?.from?._id,
-        }
-      );
-      Toast.show({
-        type: 'success',
-        text1: 'Request has been accepted',
-      });
-      queryClient.invalidateQueries({
-        queryKey: [
-          'request',
-          'single',
-          'worker',
-          'pending_requests',
-          'pending_worker',
-          'myStaffs',
-        ],
-      });
+      const { error } = await supabase
+        .from('workspace')
+        .update({
+          salary: request?.salary,
+          responsibility: request?.responsibility,
+          workerId: request?.to?.userId,
+        })
+        .eq('id', request?.workspaceId);
 
-      console.log(res);
-
-      router.push(`/wk/${data?.requestExists?.workspaceId}`);
+      const { error: err } = await supabase
+        .from('worker')
+        .update({
+          role: request?.role,
+          bossId: request?.from?.userId,
+          workspaceId: request?.workspaceId,
+          organizationId: request?.from?.organizationId?.id,
+        })
+        .eq('id', request.to.workerId);
+      if (!error && !err) {
+        Toast.show({
+          type: 'success',
+          text1: 'Request has been accepted',
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            'request',
+            'single',
+            'worker',
+            'pending_requests',
+            'pending_worker',
+            'myStaffs',
+          ],
+        });
+        router.replace(`/wk/${data?.request?.workspaceId}`);
+      }
+      if (error || err) {
+        Toast.show({
+          type: 'error',
+          text1: 'Something went wrong',
+        });
+        console.log(error || err);
+      }
     } catch (error) {
       console.log(error);
       Toast.show({
@@ -92,14 +104,36 @@ const Request = (props: Props) => {
   const rejectRequest = async () => {
     setCancelling(true);
     try {
-      await axios.post(`http://192.168.240.212:3000/request/delete`, {
-        id: data?.requestExists?._id,
-      });
-      Toast.show({
-        type: 'success',
-        text1: 'Request Canceled',
-      });
-      queryClient.invalidateQueries({ queryKey: ['requests'] });
+      const { error } = await supabase
+        .from('request')
+        .delete()
+        .eq('id', requestId);
+
+      if (!error) {
+        Toast.show({
+          type: 'success',
+          text1: 'Request Canceled',
+        });
+
+        queryClient.invalidateQueries({
+          queryKey: ['request', request.from?.userId, request.to.userId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['single', requestId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['pending_requests', id],
+        });
+
+        router.back();
+      }
+
+      if (error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Something went wrong',
+        });
+      }
     } catch (error) {
       console.log(error);
 
@@ -111,13 +145,14 @@ const Request = (props: Props) => {
       setCancelling(false);
     }
   };
+
   return (
     <Container flex={1}>
       <HeaderNav title="Request" />
       <VStack>
         <View style={{ marginBottom: 20 }}>
           <Image
-            source={requestExists?.from?.organizations?.avatar.url}
+            source={request?.from?.organizationId?.avatar}
             style={{ width: '100%', height: 200, borderRadius: 6 }}
             contentFit="cover"
           />
@@ -127,19 +162,19 @@ const Request = (props: Props) => {
           poppins="Medium"
           style={{ textTransform: 'capitalize' }}
         >
-          {formatDistanceToNow(requestExists?.createdAt)} ago
+          {formatDistanceToNow(request?.created_at)} ago
         </MyText>
         <MyText fontSize={18} poppins="Medium">
-          From : {requestExists?.from?.organizations?.organizationName}
+          From : {request?.from?.organizationId?.name}
         </MyText>
         <MyText fontSize={18} poppins="Medium">
-          Responsibilities : {requestExists?.responsibility}
+          Responsibilities : {request?.responsibility}
         </MyText>
         <MyText fontSize={18} poppins="Medium">
-          Salary : {requestExists?.salary}
+          Salary : {request?.salary}
         </MyText>
         <MyText fontSize={18} poppins="Medium">
-          Role : {requestExists?.role}
+          Role : {request?.role}
         </MyText>
       </VStack>
       <HStack mt={'auto'} mb={30} gap={10}>

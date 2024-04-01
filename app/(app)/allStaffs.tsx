@@ -20,10 +20,10 @@ import { useData } from '@/hooks/useData';
 type Props = {};
 
 const AllStaffs = (props: Props) => {
-  const { id, role } = useDetailsToAdd();
+  const { workspaceId, role } = useDetailsToAdd();
   const { id: userId } = useData();
   const [staffs, setStaffs] = useState<Workers[]>();
-  console.log('🚀 ~ AllStaffs ~ id:', id, 'role', staffs?.[0].userId?.userId);
+
   const {
     data,
     isPending,

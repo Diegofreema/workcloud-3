@@ -25,6 +25,8 @@ export type Organization = {
   workDays: string;
   workspaces: number[];
 };
+
+type UserWithOrg = {};
 export type Org = {
   avatar: string;
   category: string;
@@ -50,7 +52,7 @@ export type Profile = {
   email: string;
   id?: number;
   name: string;
-  organizationId: {
+  organizationId?: {
     id: number;
     avatar: string;
     category: string;
@@ -73,7 +75,7 @@ export type Profile = {
   posts?: number[];
   streamToken: string;
   userId: string;
-  workerId: {
+  workerId?: {
     created_at: string;
     experience: string;
     id: number;
@@ -86,19 +88,17 @@ export type Profile = {
     workspaceId: number;
   } | null;
 
-  workspace:
-    | {
-        active: boolean | null;
-        created_at: string;
-        id: number;
-        leisure: boolean | null;
-        organizationId: number | null;
-        ownerId: number | null;
-        responsibility: string | null;
-        salary: string | null;
-        waitlist: number[] | null;
-      }[]
-    | null;
+  workspace?: {
+    active: boolean | null;
+    created_at: string;
+    id: number;
+    leisure: boolean | null;
+    organizationId: number | null;
+    ownerId: number | null;
+    responsibility: string | null;
+    salary: string | null;
+    waitlist: number[] | null;
+  }[];
 };
 
 export type Wks = {
@@ -129,18 +129,51 @@ export type Workers = {
   role: string;
   bossId: string;
 };
-
+type UserWthWorkerProfile = {
+  avatar: string;
+  birthday: string;
+  created_at: string;
+  email: string;
+  id: number;
+  name: string;
+  organizationId: number;
+  phoneNumber: string;
+  posts: number[];
+  streamToken: string;
+  userId: string;
+  workerId: Workers;
+  workspaces: number[];
+};
 export type Requests = {
   created_at: string;
-  from: string;
+  from?: Profile;
   id: number;
   responsibility: string;
   role: string;
   salary: string;
-  to: string;
+  to: UserWthWorkerProfile;
   pending: boolean;
+  workspaceId: string | number;
 };
 
+export type WK = {
+  bossId: string;
+  created_at: string;
+  experience: string;
+  gender: string;
+  id: number;
+  location: string;
+  organizationId: Org;
+  qualifications: string;
+  role: string;
+  servicePointId: number;
+  skills: string;
+  userId: string;
+  workspaceId: number;
+  workerId: Profile;
+  active: boolean;
+  leisure: boolean;
+};
 export type Person = {
   user: {
     avatarUrl: string;

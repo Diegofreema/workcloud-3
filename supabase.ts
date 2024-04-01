@@ -114,28 +114,37 @@ export type Database = {
           created_at: string
           from: string | null
           id: number
+          organizationId: number | null
+          pending: boolean | null
           responsibility: string | null
           role: string | null
           salary: string | null
           to: string | null
+          workspaceId: number | null
         }
         Insert: {
           created_at?: string
           from?: string | null
           id?: number
+          organizationId?: number | null
+          pending?: boolean | null
           responsibility?: string | null
           role?: string | null
           salary?: string | null
           to?: string | null
+          workspaceId?: number | null
         }
         Update: {
           created_at?: string
           from?: string | null
           id?: number
+          organizationId?: number | null
+          pending?: boolean | null
           responsibility?: string | null
           role?: string | null
           salary?: string | null
           to?: string | null
+          workspaceId?: number | null
         }
         Relationships: [
           {
@@ -146,11 +155,25 @@ export type Database = {
             referencedColumns: ["userId"]
           },
           {
+            foreignKeyName: "public_request_organizationId_fkey"
+            columns: ["organizationId"]
+            isOneToOne: false
+            referencedRelation: "organization"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "public_request_to_fkey"
             columns: ["to"]
             isOneToOne: false
             referencedRelation: "user"
             referencedColumns: ["userId"]
+          },
+          {
+            foreignKeyName: "public_request_workspaceId_fkey"
+            columns: ["workspaceId"]
+            isOneToOne: false
+            referencedRelation: "workspace"
+            referencedColumns: ["id"]
           },
         ]
       }

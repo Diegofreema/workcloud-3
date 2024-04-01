@@ -23,7 +23,7 @@ const PendingStaffs = (props: Props) => {
     isRefetching,
     isRefetchError,
   } = usePendingWorkers(id);
-  console.log('🚀 ~ PendingStaffs ~ data:', data?.requestsList);
+  console.log('🚀 ~ PendingStaffs ~ data:', data?.requests);
   if (isError || isRefetchError || isPaused || data?.error) {
     return <ErrorComponent refetch={refetch} />;
   }
@@ -45,17 +45,17 @@ const PendingStaffs = (props: Props) => {
         refreshing={isRefetching}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 50 }}
-        data={data?.requestsList}
+        data={data?.requests}
         renderItem={({ item }) => (
           <UserPreview
-            imageUrl={item?.to?.avatar?.url}
+            imageUrl={item?.to?.avatar}
             name={item?.to?.name}
             navigate
-            subText={item?.status}
-            id={item?.to?.worker}
+            subText={item?.pending}
+            id={item?.to?.userId}
           />
         )}
-        keyExtractor={(item) => item?._id.toString()}
+        keyExtractor={(item) => item?.id.toString()}
       />
     </Container>
   );

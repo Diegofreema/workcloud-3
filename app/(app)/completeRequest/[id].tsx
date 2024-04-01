@@ -81,7 +81,7 @@ const CompleteRequest = (props: Props) => {
           from: isMe,
           to: data?.worker?.userId?.userId,
           responsibility,
-          salary,
+          salary: `₦${salary}`,
           role: workerRole,
           workspaceId,
           organizationId: orgId,
@@ -93,10 +93,10 @@ const CompleteRequest = (props: Props) => {
             text1: 'Request sent',
           });
           queryClient.invalidateQueries({
-            queryKey: ['request'],
+            queryKey: ['request', isMe, data?.worker?.userId?.userId],
           });
-
-          router.push('/pending-staffs');
+          resetForm();
+          router.replace('/pending-staffs');
         }
 
         if (error) {
@@ -197,7 +197,7 @@ const CompleteRequest = (props: Props) => {
               label="Salary"
               value={salary}
               onChangeText={handleChange('salary')}
-              placeholder="Input a salary range"
+              placeholder="Input a salary range in naira"
               keyboardType="default"
             />
             {touched.salary && errors.salary && (

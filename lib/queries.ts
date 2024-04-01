@@ -7,6 +7,7 @@ import {
   Person,
   Profile,
   Requests,
+  WK,
   Wks,
   WorkType,
   WorkerProfile,
@@ -78,7 +79,7 @@ export const useProfile = (id: any) => {
       .single();
 
     return {
-      profile: data,
+      profile: data as Profile,
       error,
     };
   };
@@ -102,7 +103,24 @@ export const useGetWks = (id: any) => {
     queryFn: async () => getWks(),
   });
 };
+export const useGetWk = (id: any) => {
+  const getWks = async () => {
+    const { data, error } = await supabase
+      .from('workspace')
+      .select(`*, organizationId(*), workerId(*)`)
+      .eq('id', id)
+      .single();
+    return {
+      wks: data as WK,
+      error,
+    };
+  };
 
+  return useQuery({
+    queryKey: ['wk', id],
+    queryFn: async () => getWks(),
+  });
+};
 export const useWorkers = () => {
   const { userId } = useAuth();
   const getWorkers = async () => {
@@ -157,11 +175,15 @@ export const useGetOtherWorkers = (id: any) => {
 
 export const usePendingWorkers = (id: any) => {
   const getPendingWorker = async () => {
-    const { data } = await axios.get(
-      `http://192.168.240.212:3000/request/all/${id}`
-    );
+    const { data, error } = await supabase
+      .from('request')
+      .select(`*, to (name, avatar, userId, email, workerId(*))`)
+      .eq('from', id);
 
-    return data;
+    return {
+      requests: data as Requests[],
+      error,
+    };
   };
   return useQuery({
     queryKey: ['pending_worker', id],
@@ -170,11 +192,15 @@ export const usePendingWorkers = (id: any) => {
 };
 export const usePendingRequest = (id: any) => {
   const getPending = async () => {
-    const { data } = await axios.get(
-      `http://192.168.240.212:3000/request/to/${id}`
-    );
+    const { data, error } = await supabase
+      .from('request')
+      .select(`*, from (name, avatar, userId, email, organizationId(*))`)
+      .eq('to', id);
 
-    return data;
+    return {
+      requests: data as Requests[],
+      error,
+    };
   };
   return useQuery({
     queryKey: ['pending_requests', id],
@@ -233,13 +259,15 @@ export const useGetRequests = (from: any, to: any) => {
 };
 export const useGetRequest = (id: any) => {
   const getRequest = async () => {
-    const { data } = await axios.post(
-      `http://192.168.240.212:3000/request/single`,
-      {
-        id,
-      }
-    );
-    return data;
+    const { data, error } = await supabase
+      .from('request')
+      .select('*, from(*, organizationId (*)), to(*)')
+      .eq('id', id)
+      .single();
+    return {
+      request: data as Requests,
+      error,
+    };
   };
   return useQuery({
     queryKey: ['single', id],
