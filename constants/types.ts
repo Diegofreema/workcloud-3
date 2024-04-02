@@ -28,6 +28,7 @@ export type Organization = {
 
 type UserWithOrg = {};
 export type Org = {
+  subTitle?: string;
   avatar: string;
   category: string;
   created_at: string;
@@ -143,6 +144,21 @@ type UserWthWorkerProfile = {
   userId: string;
   workerId: Workers;
   workspaces: number[];
+};
+
+export type WorkerWithWorkspace = {
+  created_at: string;
+  experience?: string;
+  id?: number;
+  location?: string;
+  organizationId?: Organization;
+  qualifications?: string;
+  servicePointId?: number;
+  skills: string;
+  userId: Profile;
+  workspaceId?: WK;
+  role: string;
+  bossId: string;
 };
 export type Requests = {
   created_at: string;
@@ -292,4 +308,11 @@ export type Workspace = {
   salary: string;
   waitlist: number[];
   workerId: string;
+};
+
+export type WaitList = {
+  id: number;
+  created_at: number;
+  workspace: number;
+  customer: Profile;
 };

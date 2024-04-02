@@ -67,26 +67,11 @@ export default function TabOneScreen() {
     }
   }, [data]);
 
-  if (
-    isError ||
-    isPaused ||
-    isErrorConnections ||
-    isConnectionsPaused
-    // isErrorWorker ||
-    // isOrgsError ||
-    // workerProfile?.error ||
-    // isPausedProfile ||
-    // isOrgsPaused
-  ) {
+  if (isError || isPaused || isErrorConnections || isConnectionsPaused) {
     return <ErrorComponent refetch={handleRefetch} />;
   }
 
-  if (
-    isPending ||
-    isPendingConnections
-    // isPendingWorkerProfile ||
-    // isOrgsPending
-  ) {
+  if (isPending || isPendingConnections) {
     return <LoadingComponent />;
   }
 

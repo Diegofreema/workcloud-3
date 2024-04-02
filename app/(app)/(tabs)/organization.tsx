@@ -128,7 +128,7 @@ const workspace = (props: Props) => {
           data={otherOrgs}
           // @ts-ignore
           renderItem={({ item }) => <WorkspaceItem org={item} />}
-          keyExtractor={(item) => item?._id?.toString()}
+          keyExtractor={(item) => item?.id?.toString()}
           showsVerticalScrollIndicator={false}
           refreshing={isRefetching}
           onRefresh={refetchOther}

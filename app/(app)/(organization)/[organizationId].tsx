@@ -125,10 +125,6 @@ const OrganizationDetails = (props: Props) => {
     isPaused: isPausedWks,
   } = useGetWks(id);
 
-  if (isPending) {
-    return <LoadingComponent />;
-  }
-
   const handleRefetch = () => {
     refetch();
   };

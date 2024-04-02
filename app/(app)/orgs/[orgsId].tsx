@@ -8,7 +8,6 @@ import { MyText } from '../../../components/Ui/MyText';
 import { Image } from 'expo-image';
 import { colors } from '../../../constants/Colors';
 import { StyleSheet } from 'react-native';
-import OrganizationDetails from '../(organization)/[organizationId]';
 import { EvilIcons, Fontisto, Ionicons } from '@expo/vector-icons';
 import { MyButton } from '../../../components/Ui/MyButton';
 import { useRouter } from 'expo-router';

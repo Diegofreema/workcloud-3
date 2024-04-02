@@ -8,10 +8,12 @@ import {
   Profile,
   Requests,
   WK,
+  WaitList,
   Wks,
   WorkType,
   WorkerProfile,
   WorkerProfileArray,
+  WorkerWithWorkspace,
   Workers,
   Workspace,
   connections,
@@ -119,6 +121,47 @@ export const useGetWk = (id: any) => {
   return useQuery({
     queryKey: ['wk', id],
     queryFn: async () => getWks(),
+  });
+};
+
+export const useGetWaitList = (id: any) => {
+  const getWaitList = async () => {
+    const { data, error } = await supabase
+      .from('waitList')
+      .select(`*,  customer(*)`)
+      .eq('workspace', id);
+    return {
+      waitList: data as WaitList[],
+      error,
+    };
+  };
+
+  return useQuery({
+    queryKey: ['waitList', id],
+    queryFn: async () => getWaitList(),
+  });
+};
+
+export const useSearch = (value: string) => {
+  console.log('🚀 ~ useSearch ~ value:', value);
+  const getOrgs = async () => {
+    const { data, error } = await supabase
+      .from('organization')
+      .select()
+      .textSearch('description', value, {
+        type: 'websearch',
+        config: 'english',
+      });
+
+    return {
+      organization: data,
+      error,
+    };
+  };
+
+  return useQuery({
+    queryKey: ['search', value],
+    queryFn: async () => getOrgs(),
   });
 };
 export const useWorkers = () => {
@@ -289,5 +332,41 @@ export const useGetMyStaffs = (id: any) => {
   return useQuery({
     queryKey: ['myStaffs', id],
     queryFn: async () => getMyStaffs(),
+  });
+};
+
+export const useGetOrg = (id: string) => {
+  const getOrg = async () => {
+    const { data, error } = await supabase
+      .from('organization')
+      .select()
+      .eq('id', id)
+      .single();
+    return {
+      org: data as Org,
+      error,
+    };
+  };
+  return useQuery({
+    queryKey: ['single_orgs', id],
+    queryFn: getOrg,
+  });
+};
+
+export const useOrgsWorkers = (id: any) => {
+  const getOrg = async () => {
+    const { data, error } = await supabase
+      .from('worker')
+      .select(`*, workspaceId(*), userId(*)`)
+      .eq('organizationId', id);
+
+    return {
+      workers: data as WorkerWithWorkspace[],
+      error,
+    };
+  };
+  return useQuery({
+    queryKey: ['single_orgs', id],
+    queryFn: getOrg,
   });
 };

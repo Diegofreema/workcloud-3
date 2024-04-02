@@ -7,10 +7,10 @@ import {
   View,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { AuthHeader } from '@/components/AuthHeader';
 import { HeaderNav } from '@/components/HeaderNav';
-import { useGetWk } from '@/lib/queries';
+import { useGetWaitList, useGetWk } from '@/lib/queries';
 import { useData } from '@/hooks/useData';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
@@ -24,14 +24,21 @@ import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import { MyText } from '@/components/Ui/MyText';
+import { WaitList } from '@/constants/types';
+import { formatDistanceToNow } from 'date-fns';
+import axios from 'axios';
+import { AddToCall } from '@/components/Dialogs/AddToCall';
+import { useToken } from '@/hooks/useToken';
 type Props = {};
 
 const Work = (props: Props) => {
   const { id } = useLocalSearchParams();
+  console.log('🚀 ~ Work ~ id:', id);
   const { id: userId } = useData();
   const [isActive, setIsActive] = useState(false);
   const [isLeisure, setIsLeisure] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const { onOpen, generateToken, token, getWorkspaceId } = useToken();
   const queryClient = useQueryClient();
   const {
     data,
@@ -42,10 +49,19 @@ const Work = (props: Props) => {
     isRefetching,
     isRefetchError,
   } = useGetWk(id);
+  const {
+    data: waitListData,
+    isPaused: isPausedWaitList,
+    isPending: isPendingWaitList,
+    isError: isErrorWaitList,
+    refetch: refetchWaitList,
+    isRefetching: isRefetchRefetchWaitList,
+    isRefetchError: isRefetchRefetchRefetchWaitList,
+  } = useGetWaitList(id);
   useEffect(() => {
     if (data) {
-      setIsActive(data.wks.active);
-      setIsLeisure(data.wks.leisure);
+      setIsActive(data?.wks?.active);
+      setIsLeisure(data?.wks?.leisure);
     }
   }, [data]);
   useEffect(() => {
@@ -57,11 +73,24 @@ const Work = (props: Props) => {
           event: '*',
           schema: 'public',
           table: 'workspace',
-          filter: `id=eq.${id}`,
         },
         (payload) => {
           if (payload) {
             queryClient.invalidateQueries({ queryKey: ['wk', id] });
+          }
+          console.log('Change received!', payload);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'waitList',
+        },
+        (payload) => {
+          if (payload) {
+            queryClient.invalidateQueries({ queryKey: ['waitList', id] });
           }
           console.log('Change received!', payload);
         }
@@ -72,11 +101,22 @@ const Work = (props: Props) => {
       supabase.removeChannel(channel);
     };
   }, []);
-  if (isError || isRefetchError || isPaused) {
-    return <ErrorComponent refetch={refetch} />;
+
+  const handleRefetch = () => {
+    refetch();
+    refetchWaitList();
+  };
+  if (
+    isError ||
+    isRefetchError ||
+    isPaused ||
+    isPausedWaitList ||
+    isErrorWaitList
+  ) {
+    return <ErrorComponent refetch={handleRefetch} />;
   }
 
-  if (isPending) {
+  if (isPending || isPendingWaitList) {
     return <LoadingComponent />;
   }
   const showModal = () => {
@@ -88,64 +128,117 @@ const Work = (props: Props) => {
     setIsVisible(false);
   };
   const { wks } = data;
-  console.log('🚀 ~ Work ~ wks:', wks.active);
-  return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ flexGrow: 1 }}
-      style={styles.container}
-    >
-      <HeaderNav
-        title="Workspace"
-        subTitle={`${wks.organizationId.name} lobby`}
-      />
-      <View style={{ marginTop: 20 }} />
-      <UserPreview
-        name={wks.workerId.name}
-        imageUrl={wks.workerId.avatar}
-        subText={wks.role}
-        workspace
-        active={wks.active}
-      />
-      <Buttons
-        onShowModal={showModal}
-        onProcessors={onProcessors}
-        onSignOff={signOff}
-      />
 
-      <FlatList
-        contentContainerStyle={{
-          flexGrow: 1,
-          gap: 10,
-          width: '100%',
-        }}
-        columnWrapperStyle={{ gap: 10 }}
-        numColumns={4}
+  const { waitList, error } = waitListData;
+  console.log('🚀 ~ Work ~ waitList:', waitList);
+  const createAndSendMail = async (item: WaitList) => {
+    generateToken();
+    try {
+      const { data } = await axios.post(
+        'http://192.168.240.212:3000/auth/send-mail',
+        {
+          email: item?.customer?.email,
+          name: item?.customer?.name,
+          token: token,
+        }
+      );
+      Toast.show({
+        type: 'success',
+        text1: 'Code has been resent',
+        text2: data.message,
+      });
+      router.replace(`/video/call/${token}`);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error, something went wrong',
+        text2: error?.response?.data.error,
+      });
+    }
+  };
+  const openModal = () => {
+    onOpen();
+  };
+  const onAddToCall = (item: WaitList) => {
+    getWorkspaceId(item?.id);
+    if (userId === wks?.workerId?.userId) {
+      createAndSendMail(item);
+
+      return;
+    }
+
+    if (userId === item.customer?.userId) {
+      openModal();
+    }
+  };
+  return (
+    <>
+      <AddToCall />
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={() => (
-          <HStack gap={5} alignItems="center" my={20}>
-            <Text style={{ color: 'black', fontFamily: 'PoppinsBold' }}>
-              Waiting in your lobby
-            </Text>
-            <View style={styles.rounded}>
-              <Text style={{ color: 'white', fontFamily: 'PoppinsBold' }}>
-                0
+        contentContainerStyle={{ flexGrow: 1 }}
+        style={styles.container}
+      >
+        <HeaderNav
+          title="Workspace"
+          subTitle={`${wks.organizationId.name} lobby`}
+        />
+        <View style={{ marginTop: 20 }} />
+        <UserPreview
+          name={wks.workerId.name}
+          imageUrl={wks.workerId.avatar}
+          subText={wks.role}
+          workspace
+          active={wks.active}
+        />
+        <Buttons
+          onShowModal={showModal}
+          onProcessors={onProcessors}
+          onSignOff={signOff}
+        />
+
+        <FlatList
+          contentContainerStyle={{
+            flexGrow: 1,
+            gap: 10,
+            width: '100%',
+          }}
+          columnWrapperStyle={{ gap: 10 }}
+          numColumns={4}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={() => (
+            <HStack gap={5} alignItems="center" my={20}>
+              <Text style={{ color: 'black', fontFamily: 'PoppinsBold' }}>
+                Waiting in your lobby
               </Text>
-            </View>
-          </HStack>
-        )}
-        scrollEnabled={false}
-        data={[1, 2, 3, 4, 5]}
-        renderItem={({ item }) => <Profile item={item} />}
-      />
-      <BottomActive
-        id={id}
-        onClose={onClose}
-        active={isActive}
-        leisure={isLeisure}
-        isVisible={isVisible}
-      />
-    </ScrollView>
+              <View style={styles.rounded}>
+                <Text
+                  style={{
+                    color: 'white',
+                    fontFamily: 'PoppinsMedium',
+                    fontSize: 12,
+                  }}
+                >
+                  {waitList?.length}
+                </Text>
+              </View>
+            </HStack>
+          )}
+          scrollEnabled={false}
+          data={waitList}
+          renderItem={({ item }) => (
+            <Profile item={item} onAddToCall={onAddToCall} />
+          )}
+        />
+        <BottomActive
+          id={id}
+          onClose={onClose}
+          active={isActive}
+          leisure={isLeisure}
+          isVisible={isVisible}
+        />
+      </ScrollView>
+    </>
   );
 };
 
@@ -220,13 +313,22 @@ const Buttons = ({ onShowModal, onProcessors, onSignOff }: ButtonProps) => {
   );
 };
 
-const Profile = ({ item }: { item: any }) => {
+const Profile = ({
+  item,
+  onAddToCall,
+}: {
+  item: WaitList;
+  onAddToCall: (item: WaitList) => void;
+}) => {
   return (
-    <Pressable style={{ width: '23%' }}>
+    <Pressable style={{ width: '25%' }} onPress={() => onAddToCall(item)}>
       <VStack flex={1} alignItems="center" justifyContent="center">
-        <Avatar.Image size={50} source={{ uri: 'https://i.pravatar.cc/300' }} />
+        <Avatar.Image size={50} source={{ uri: item?.customer?.avatar }} />
         <MyText poppins="Medium" fontSize={13}>
-          Clara
+          {item?.customer?.name.split(' ')[0]}
+        </MyText>
+        <MyText poppins="Light" fontSize={10} style={{ textAlign: 'center' }}>
+          {formatDistanceToNow(item.created_at)}
         </MyText>
       </VStack>
     </Pressable>
