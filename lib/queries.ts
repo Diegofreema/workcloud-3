@@ -59,7 +59,7 @@ export const usePersonalOrgs = (id: any) => {
 export const useOtherOrgs = (id: string) => {
   const getOrgs = async () => {
     const { data } = await axios.get(
-      `http://192.168.240.212:3000/organization/other/${id}`
+      `https://workcloud-server.vercel.app/organization/other/${id}`
     );
 
     return data as Org[];
@@ -254,7 +254,7 @@ export const usePendingRequest = (id: any) => {
 export const useGetConnection = (id: any) => {
   const getConnections = async () => {
     const { data } = await axios.get(
-      `http://192.168.240.212:3000/connections/all/${id}`
+      `https://workcloud-server.vercel.app/connections/all/${id}`
     );
     return data as ConnectionType;
   };

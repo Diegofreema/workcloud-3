@@ -152,7 +152,7 @@ export default function SignInScreen() {
 
       try {
         const { data } = await axios.post(
-          'http://192.168.240.212:3000/auth/sign-in',
+          'https://workcloud-server.vercel.app/auth/sign-in',
           {
             email: emailAddress,
             password,

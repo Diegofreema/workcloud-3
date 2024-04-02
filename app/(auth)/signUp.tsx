@@ -77,7 +77,7 @@ export default function SignUpScreen() {
       const { emailAddress, firstName, lastName, password } = values;
       try {
         const { data } = await axios.post(
-          'http://192.168.240.212:3000/auth/create',
+          'https://workcloud-server.vercel.app/auth/create',
           {
             email: emailAddress.toLowerCase(),
             name: `${firstName} ${lastName}`,
@@ -154,7 +154,7 @@ export default function SignUpScreen() {
     setVerifyingCode(true);
     try {
       const { data } = await axios.post(
-        'http://192.168.240.212:3000/auth/verify-email',
+        'https://workcloud-server.vercel.app/auth/verify-email',
         {
           token: code,
           userId: id,
@@ -189,7 +189,7 @@ export default function SignUpScreen() {
     setStartTimer(true);
     try {
       const { data } = await axios.post(
-        'http://192.168.240.212:3000/auth/re-verify-email',
+        'https://workcloud-server.vercel.app/auth/re-verify-email',
         {
           userId: id,
         }

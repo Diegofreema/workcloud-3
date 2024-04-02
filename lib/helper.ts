@@ -5,7 +5,7 @@ import Toast from 'react-native-toast-message';
 export const createOrg = async (orgData: Org) => {
   try {
     const { data } = await axios.post(
-      'http://192.168.240.212:3000/organization/create',
+      'https://workcloud-server.vercel.app/organization/create',
       orgData
     );
 
@@ -18,7 +18,7 @@ export const createOrg = async (orgData: Org) => {
 export const updateOrg = async (orgData: Org) => {
   try {
     const { data } = await axios.post(
-      'http://192.168.240.212:3000/organization/update',
+      'https://workcloud-server.vercel.app/organization/update',
       orgData
     );
 

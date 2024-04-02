@@ -135,7 +135,7 @@ const Work = (props: Props) => {
     generateToken();
     try {
       const { data } = await axios.post(
-        'http://192.168.240.212:3000/auth/send-mail',
+        'https://workcloud-server.vercel.app/auth/send-mail',
         {
           email: item?.customer?.email,
           name: item?.customer?.name,
