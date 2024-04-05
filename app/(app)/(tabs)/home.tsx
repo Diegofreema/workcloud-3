@@ -51,7 +51,7 @@ export default function TabOneScreen() {
     error,
     isPaused: isConnectionsPaused,
   } = useGetConnection(profile?.id);
-
+  console.log(data?.error, 'err');
   const { onOpen } = useOrganizationModal();
   const handleRefetch = () => {
     refetch();
@@ -75,8 +75,8 @@ export default function TabOneScreen() {
     return <LoadingComponent />;
   }
 
-  const { profile: user } = data;
-  const { allConnections } = connections;
+  const { profile: user, error: err } = data;
+  const { connections: connectionsData } = connections;
 
   return (
     <View style={[defaultStyle, styles.container]}>
@@ -101,7 +101,7 @@ export default function TabOneScreen() {
 
           paddingBottom: 50,
         }}
-        data={allConnections}
+        data={connectionsData}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item, index }) => {
           const lastIndex = [1, 2, 3].length - 1;

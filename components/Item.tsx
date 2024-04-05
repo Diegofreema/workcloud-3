@@ -8,31 +8,12 @@ import { VStack } from '@gluestack-ui/themed';
 import { useData } from '@/hooks/useData';
 import { useChatContext } from 'stream-chat-expo';
 import { useRouter } from 'expo-router';
+import { ConnectionType } from '../constants/types';
 
-type ItemType = {
-  _id: string;
-  userId: string;
-  organizationsId: string;
-  organization: {
-    organizationName: string;
-    open: boolean;
-    avatar: { url: string };
-    _id: string;
-  };
-  createdAt: string;
-};
-export const Item = (item: ItemType & { isLastItemOnList: boolean }) => {
-  const { user } = useData();
-  const { client } = useChatContext();
+export const Item = (item: ConnectionType & { isLastItemOnList: boolean }) => {
   const router = useRouter();
   const startChannel = async () => {
-    const channel = client.channel('messaging', {
-      members: [user?.id as string, item.userId],
-    });
-
-    await channel.watch();
-
-    router.push(`/chat/${channel.id}`);
+    router.push(`/reception/${item?.connectedTo?.organizationId?.id}`);
   };
   return (
     <Pressable
@@ -47,16 +28,16 @@ export const Item = (item: ItemType & { isLastItemOnList: boolean }) => {
       <HStack justifyContent="space-between" alignItems="center">
         <HStack gap={7}>
           <Image
-            source={{ uri: item?.organization?.avatar?.url }}
+            source={{ uri: item?.connectedTo?.organizationId?.avatar }}
             style={{ width: 48, height: 48, borderRadius: 9999 }}
           />
           <VStack>
             <MyText poppins="Bold" fontSize={10}>
-              {item?.organization?.organizationName}
+              {item?.connectedTo?.organizationId?.name}
             </MyText>
-            <View
+            {/* <View
               style={{
-                backgroundColor: item?.organization?.open
+                backgroundColor: item?.connectedTo
                   ? colors.openTextColor
                   : colors.closeBackgroundColor,
                 borderRadius: 9999,
@@ -64,18 +45,8 @@ export const Item = (item: ItemType & { isLastItemOnList: boolean }) => {
                 alignItems: 'center',
               }}
             >
-              <MyText
-                style={{
-                  color: item?.organization?.open
-                    ? colors.openBackgroundColor
-                    : colors.closeTextColor,
-                }}
-                poppins="Bold"
-                fontSize={9}
-              >
-                {item?.organization?.open ? 'Open' : 'Closed'}
-              </MyText>
-            </View>
+           
+            </View> */}
           </VStack>
         </HStack>
         <VStack>
@@ -83,7 +54,7 @@ export const Item = (item: ItemType & { isLastItemOnList: boolean }) => {
             Today
           </MyText>
           <MyText poppins="Light" fontSize={9}>
-            {formatDistanceToNow(new Date(item.createdAt))}
+            {formatDistanceToNow(new Date(item?.created_at))}
           </MyText>
         </VStack>
       </HStack>

@@ -1,8 +1,10 @@
-import { StyleSheet, View, Text } from 'react-native';
-import { TextInput, TextInputProps } from 'react-native-paper';
+import { StyleSheet, View, Text, TextInputProps } from 'react-native';
+
 import { useDarkMode } from '../hooks/useDarkMode';
 import { colors } from '../constants/Colors';
 import { fontFamily } from '../constants';
+import { Input } from '@rneui/themed';
+import { IconNode, InputProps } from '@rneui/base';
 
 type Props = TextInputProps & {
   placeholder: string;
@@ -15,6 +17,7 @@ type Props = TextInputProps & {
   password?: boolean;
   id?: string;
   numberOfLines?: number;
+  rightIcon?: IconNode;
 };
 
 export const InputComponent = ({
@@ -28,6 +31,7 @@ export const InputComponent = ({
   password,
   label,
   numberOfLines,
+
   ...props
 }: Props): JSX.Element => {
   const { darkMode } = useDarkMode();
@@ -50,31 +54,25 @@ export const InputComponent = ({
           {label}
         </Text>
       )}
-      <TextInput
+      <Input
         {...props}
-        activeUnderlineColor="transparent"
-        numberOfLines={numberOfLines}
-        placeholderTextColor={'black'}
-        style={{
-          backgroundColor: '#E9E9E9',
-          flex: 1,
-        }}
-        contentStyle={{
-          color: 'black',
-          fontFamily: fontFamily.Medium,
-          fontSize: 13,
-          flex: 1,
-        }}
-        right={
-          password && (
-            <TextInput.Icon
-              id={id}
-              icon={secureTextEntry ? 'eye' : 'eye-off'}
-              onPress={() => handleToggle(id as string)}
-            />
-          )
-        }
         placeholder={placeholder}
+        containerStyle={{
+          justifyContent: 'center',
+        }}
+        inputContainerStyle={{
+          borderBottomColor: 'transparent',
+          backgroundColor: '#E5E5E5',
+          borderBottomWidth: 0,
+          marginHorizontal: -10,
+          padding: 8,
+          borderRadius: 5,
+        }}
+        placeholderTextColor={'grey'}
+        inputStyle={{
+          fontFamily: 'PoppinsLight',
+          fontSize: 13,
+        }}
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}

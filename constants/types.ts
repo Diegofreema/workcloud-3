@@ -170,6 +170,7 @@ export type Requests = {
   to: UserWthWorkerProfile;
   pending: boolean;
   workspaceId: string | number;
+  qualities: string;
 };
 
 export type WK = {
@@ -208,18 +209,10 @@ export type Person = {
 };
 
 export type ConnectionType = {
-  allConnections: {
-    _id: string;
-    userId: string;
-    organizationsId: string;
-    organization: {
-      organizationName: string;
-      open: boolean;
-      avatar: { url: string };
-      _id: string;
-    };
-    createdAt: string;
-  }[];
+  id: number;
+  owner: string;
+  connectedTo: WK;
+  created_at: string;
 };
 
 export type WorkerProfile = {

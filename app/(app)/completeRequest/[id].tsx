@@ -27,6 +27,7 @@ const validationSchema = yup.object().shape({
   role: yup.string().required('Role is required'),
   responsibility: yup.string().required('responsibility is required'),
   salary: yup.string().required('salary is required'),
+  qualities: yup.string().required('qualities are required'),
 });
 
 const CompleteRequest = (props: Props) => {
@@ -72,19 +73,21 @@ const CompleteRequest = (props: Props) => {
       role: '',
       responsibility: '',
       salary: '',
+      qualities: '',
     },
     validationSchema,
     onSubmit: async (values) => {
-      const { responsibility, salary } = values;
+      const { responsibility, salary, qualities } = values;
       try {
         const { error } = await supabase.from('request').insert({
           from: isMe,
           to: data?.worker?.userId?.userId,
           responsibility,
-          salary: `₦${salary}`,
+          salary: `${salary}`,
           role: workerRole,
           workspaceId,
           organizationId: orgId,
+          qualities,
         });
 
         if (!error) {
@@ -181,7 +184,7 @@ const CompleteRequest = (props: Props) => {
               label="Responsibility"
               value={responsibility}
               onChangeText={handleChange('responsibility')}
-              placeholder="What will this person do i your workspace?"
+              placeholder="What will this person do in your workspace?"
               keyboardType="default"
               multiline
               numberOfLines={4}
@@ -189,6 +192,23 @@ const CompleteRequest = (props: Props) => {
             {touched.responsibility && errors.responsibility && (
               <Text style={{ color: 'red', fontWeight: 'bold' }}>
                 {errors.responsibility}
+              </Text>
+            )}
+          </>
+
+          <>
+            <InputComponent
+              label="Qualities"
+              value={values.qualities}
+              onChangeText={handleChange('qualities')}
+              placeholder="What qualities are you looking for?"
+              keyboardType="default"
+              multiline
+              numberOfLines={4}
+            />
+            {touched.qualities && errors.qualities && (
+              <Text style={{ color: 'red', fontWeight: 'bold' }}>
+                {errors.qualities}
               </Text>
             )}
           </>

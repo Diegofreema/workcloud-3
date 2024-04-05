@@ -1,11 +1,16 @@
-import { Workers } from '@/constants/types';
+import { Requests, Workers } from '@/constants/types';
 import { HStack, VStack } from '@gluestack-ui/themed';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { MyText } from './MyText';
-import organizations from '../../app/(app)/(organization)/organizations';
+
 import { colors } from '@/constants/Colors';
+import { useQueryClient } from '@tanstack/react-query';
+import { useTransition } from 'react';
+import { supabase } from '@/lib/supabase';
+import Toast from 'react-native-toast-message';
+import { Button } from 'react-native-paper';
 
 type PreviewWorker = {
   name: any;
@@ -116,52 +121,178 @@ export const UserPreview = ({
   );
 };
 
-export const WorkPreview = ({
-  id,
-  imageUrl,
-  subText,
-  navigate,
-  name,
-  roleText,
-  workspaceId,
-  personal,
-}: PreviewWorker) => {
-  const router = useRouter();
-  const onPress = () => {
-    if (!navigate) return;
-    router.push(`/singleRequest/${id}`);
+export const WorkPreview = ({ item }: { item: Requests }) => {
+  console.log('🚀 ~ WorkPreview ~ item:', item);
+
+  const [pending, startTransition] = useTransition();
+  const [cancelling, startTransitionCancelling] = useTransition();
+  const {
+    created_at,
+    id,
+    role,
+    from,
+    to,
+    workspaceId,
+    salary,
+    responsibility,
+    qualities,
+  } = item;
+
+  const queryClient = useQueryClient();
+
+  const acceptRequest = async () => {
+    try {
+      const { error } = await supabase
+        .from('workspace')
+        .update({
+          salary: salary,
+          responsibility: responsibility,
+          workerId: to?.workerId,
+        })
+        .eq('id', workspaceId);
+
+      const { error: err } = await supabase
+        .from('worker')
+        .update({
+          role: role,
+          bossId: from?.userId,
+          workspaceId: workspaceId,
+          organizationId: from?.organizationId?.id,
+        })
+        .eq('id', to.workerId);
+      if (!error && !err) {
+        const { error } = await supabase.from('request').delete().eq('id', id);
+        Toast.show({
+          type: 'success',
+          text1: 'Request has been accepted',
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            'request',
+            'single',
+            'worker',
+            'pending_requests',
+            'pending_worker',
+            'myStaffs',
+          ],
+        });
+      }
+      if (error || err) {
+        Toast.show({
+          type: 'error',
+          text1: 'Something went wrong',
+        });
+        console.log(error || err);
+      }
+    } catch (error) {
+      console.log(error);
+      Toast.show({
+        type: 'error',
+        text1: 'Something went wrong',
+      });
+    }
   };
-  console.log(id);
+  const handleAccept = () => {
+    startTransition(() => {
+      acceptRequest();
+    });
+  };
+  const handleReject = () => {
+    startTransitionCancelling(() => {
+      rejectRequest();
+    });
+  };
+  const rejectRequest = async () => {
+    try {
+      const { error } = await supabase.from('request').delete().eq('id', id);
+
+      if (!error) {
+        Toast.show({
+          type: 'success',
+          text1: 'Request Canceled',
+        });
+
+        queryClient.invalidateQueries({
+          queryKey: ['request', from?.userId, to?.userId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['single', id],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['pending_requests', id],
+        });
+      }
+
+      if (error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Something went wrong',
+        });
+      }
+    } catch (error) {
+      console.log(error);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Something went wrong',
+      });
+    }
+  };
 
   return (
-    <Pressable onPress={onPress}>
-      <HStack gap={10} alignItems="center">
+    <VStack pr={20}>
+      <HStack gap={10} alignItems="flex-start">
         <Image
-          source={{ uri: imageUrl }}
+          source={{ uri: from?.organizationId?.avatar }}
           style={{ width: 60, height: 60, borderRadius: 9999 }}
           contentFit="cover"
         />
-        <VStack>
-          <MyText poppins="Bold" fontSize={16}>
-            {name}
+        <VStack mr={10} width={'90%'}>
+          <MyText
+            style={{ color: 'black', width: '100%' }}
+            poppins="Medium"
+            fontSize={14}
+          >
+            {from?.organizationId?.name} wants you to be a representative on
+            their workspace
           </MyText>
-          {subText && (
-            <MyText poppins="Medium" fontSize={14}>
-              {subText === true && 'pending'}
-            </MyText>
-          )}
-          {roleText && (
-            <MyText poppins="Medium" fontSize={14}>
-              {roleText} at somewhere
-            </MyText>
-          )}
-          {!workspaceId && personal && (
-            <MyText style={{ width: '90%' }} poppins="Medium" fontSize={14}>
-              Currently not with any organizations
-            </MyText>
-          )}
+          <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+            Role : {role}
+          </MyText>
+          <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+            Responsibility : {responsibility}
+          </MyText>
+          <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+            Qualities : {qualities}
+          </MyText>
+          <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+            Payment: {salary} naira
+          </MyText>
+
+          <HStack gap={10} mt={20}>
+            <Button
+              contentStyle={{ backgroundColor: '#C0D1FE', borderRadius: 5 }}
+              style={{ borderRadius: 5 }}
+              loading={cancelling}
+              onPress={handleReject}
+            >
+              <Text style={{ color: '#0047FF', fontFamily: 'PoppinsMedium' }}>
+                Decline
+              </Text>
+            </Button>
+            <Button
+              contentStyle={{ backgroundColor: '#0047FF' }}
+              style={{ borderRadius: 5 }}
+              loading={pending}
+              onPress={handleAccept}
+            >
+              <Text style={{ color: 'white', fontFamily: 'PoppinsMedium' }}>
+                Accept
+              </Text>
+            </Button>
+          </HStack>
         </VStack>
       </HStack>
-    </Pressable>
+    </VStack>
   );
 };

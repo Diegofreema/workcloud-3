@@ -71,7 +71,7 @@ const Profile = (props: Props) => {
         <UserPreview
           imageUrl={worker?.userId?.avatar}
           name={worker?.userId?.name}
-          roleText={worker?.assignedWorkspace}
+          roleText={worker?.role}
           personal
         />
       </View>
@@ -159,11 +159,6 @@ const Profile = (props: Props) => {
         <MyButton onPress={() => router.push(`/myWorkerProfile/edit/${id}`)}>
           <MyText poppins="Bold" style={{ color: colors.white }} fontSize={12}>
             Edit work profile
-          </MyText>
-        </MyButton>
-        <MyButton onPress={() => router.push(`/requests/${id}`)}>
-          <MyText poppins="Bold" style={{ color: colors.white }} fontSize={12}>
-            Check requests
           </MyText>
         </MyButton>
       </View>

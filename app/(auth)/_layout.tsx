@@ -3,6 +3,7 @@ import React from 'react';
 import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { useData } from '@/hooks/useData';
+import { StatusBar } from 'expo-status-bar';
 
 type Props = {};
 
@@ -13,7 +14,12 @@ const AuthLayout = (props: Props) => {
     return <Redirect href={'/home'} />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <>
+      <StatusBar style="dark" />
+      <Stack screenOptions={{ headerShown: false }} />
+    </>
+  );
 };
 
 export default AuthLayout;

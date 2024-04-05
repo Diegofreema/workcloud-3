@@ -10,6 +10,7 @@ type Props = ButtonProps & {
   textColor?: string;
   style?: StyleProp<ViewStyle>;
   labelStyle?: StyleProp<TextStyle>;
+  loading?: boolean;
 };
 
 export const MyButton = ({
@@ -19,11 +20,13 @@ export const MyButton = ({
   textColor = 'white',
   style,
   labelStyle,
+  loading,
   ...props
 }: Props): JSX.Element => {
   return (
     <Button
       {...props}
+      loading={loading}
       rippleColor={colors.ripple}
       contentStyle={[contentStyle]}
       textColor={textColor}

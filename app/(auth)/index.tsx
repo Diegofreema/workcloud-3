@@ -115,6 +115,9 @@ import * as yup from 'yup';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
 import { useData } from '@/hooks/useData';
+import { Button } from '@rneui/themed';
+import { AntDesign } from '@expo/vector-icons';
+import { ActivityIndicator } from 'react-native-paper';
 
 const validationSchema = yup.object().shape({
   emailAddress: yup
@@ -152,7 +155,7 @@ export default function SignInScreen() {
 
       try {
         const { data } = await axios.post(
-          'https://workcloud-server.vercel.app/auth/sign-in',
+          'https://workserver-plum.vercel.app/auth/sign-in',
           {
             email: emailAddress,
             password,
@@ -161,18 +164,8 @@ export default function SignInScreen() {
         console.log(data.user);
 
         if (data?.user) {
-          if (!data?.user?.verified) {
-            router.push('/signUp');
-
-            return Toast.show({
-              type: 'error',
-              text1: 'Please complete your registration',
-              text2: 'Verify your email before you login ',
-            });
-          } else {
-            getUserId(data?.user);
-            router.replace('/home');
-          }
+          getUserId(data?.user);
+          router.replace('/home');
         }
       } catch (error: any) {
         Toast.show({
@@ -225,6 +218,7 @@ export default function SignInScreen() {
             placeholder="Password"
             value={password}
             onChangeText={handleChange('password')}
+            secureTextEntry={true}
           />
           {touched.password && errors.password && (
             <Text style={{ color: 'red', fontWeight: 'bold' }}>
@@ -234,10 +228,32 @@ export default function SignInScreen() {
         </VStack>
       </VStack>
 
-      <View style={{ marginTop: 'auto', marginBottom: 50, gap: 10 }}>
-        <MyButton loading={isSubmitting} onPress={() => handleSubmit()}>
+      <View
+        style={{
+          marginTop: 'auto',
+          marginBottom: 50,
+          gap: 10,
+        }}
+      >
+        <Button
+          icon={
+            isSubmitting && (
+              <ActivityIndicator
+                style={{ marginRight: 10 }}
+                size={20}
+                color="white"
+              />
+            )
+          }
+          titleStyle={{ fontFamily: 'PoppinsMedium' }}
+          buttonStyle={{
+            backgroundColor: colors.dialPad,
+            borderRadius: 5,
+          }}
+          onPress={() => handleSubmit()}
+        >
           Sign in
-        </MyButton>
+        </Button>
 
         <Link href={'/signUp'} asChild style={{ alignItems: 'center' }}>
           <Text

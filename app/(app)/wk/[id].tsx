@@ -95,6 +95,22 @@ const Work = (props: Props) => {
           console.log('Change received!', payload);
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'request',
+        },
+        (payload) => {
+          if (payload) {
+            queryClient.invalidateQueries({
+              queryKey: ['pending_requests'],
+            });
+          }
+          console.log('Change received!', payload);
+        }
+      )
       .subscribe();
 
     return () => {
@@ -135,7 +151,7 @@ const Work = (props: Props) => {
     generateToken();
     try {
       const { data } = await axios.post(
-        'https://workcloud-server.vercel.app/auth/send-mail',
+        'https://workserver-plum.vercel.app/auth/send-mail',
         {
           email: item?.customer?.email,
           name: item?.customer?.name,

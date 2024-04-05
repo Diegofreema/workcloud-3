@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Person } from '@/constants/types';
 import { useData } from '@/hooks/useData';
+import { StatusBar } from 'expo-status-bar';
 
 const client = StreamChat.getInstance('cnvc46pm8uq9');
 
@@ -59,6 +60,7 @@ export default function AppLayout() {
   }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar style="dark" />
       <OverlayProvider value={{ style: chatTheme }}>
         <Chat client={client}>
           <Stack

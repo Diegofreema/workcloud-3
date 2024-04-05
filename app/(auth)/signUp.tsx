@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Keyboard,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useAuth, useSignUp, useUser } from '@clerk/clerk-expo';
 import { InputComponent } from '@/components/InputComponent';
-import { Center, VStack } from '@gluestack-ui/themed';
+import { Center, HStack, VStack } from '@gluestack-ui/themed';
 import { AuthTitle } from '@/components/AuthTitle';
 import { colors } from '@/constants/Colors';
 import { MyButton } from '@/components/Ui/MyButton';
@@ -14,11 +22,14 @@ import axios from 'axios';
 import { useQueryClient } from '@tanstack/react-query';
 import { useData } from '@/hooks/useData';
 import { useRouter } from 'expo-router';
-import OTPTextView from 'react-native-otp-textinput';
+// import OTPTextView from 'react-native-otp-textinput';
 import { Image } from 'expo-image';
 import { FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
+import { OtpInput } from '@/components/Forms/OtpInput';
+import { Button } from '@rneui/themed';
+import { ActivityIndicator } from 'react-native-paper';
 // import Clipboard from '@react-native-clipboard/clipboard';
 
 const validationSchema = yup.object().shape({
@@ -38,9 +49,12 @@ const validationSchema = yup.object().shape({
     .oneOf([yup.ref('password')], 'Passwords must match')
     .required('Confirm Password is required'),
 });
+const array = Array(6).fill(0);
 export default function SignUpScreen() {
   const { isLoaded, signUp, setActive } = useSignUp();
-  const input = useRef<OTPTextView>(null);
+  const [otp, setOtp] = useState([...array]);
+  const inputRef = useRef<TextInput>(null);
+  const [activeOtpIndex, setActiveOtpIndex] = useState(0);
   const { user } = useUser();
   const router = useRouter();
 
@@ -77,7 +91,7 @@ export default function SignUpScreen() {
       const { emailAddress, firstName, lastName, password } = values;
       try {
         const { data } = await axios.post(
-          'https://workcloud-server.vercel.app/auth/create',
+          'https://workserver-plum.vercel.app/auth/create',
           {
             email: emailAddress.toLowerCase(),
             name: `${firstName} ${lastName}`,
@@ -86,7 +100,9 @@ export default function SignUpScreen() {
           }
         );
         console.log(data);
-        if (data?.user?.id) {
+        if (data?.user) {
+          console.log(data, 'fgsdgsdg');
+
           const { data: userData, error } = await supabase
             .from('user')
             .insert({
@@ -94,23 +110,23 @@ export default function SignUpScreen() {
               email: data.user.email,
               streamToken: data.user.streamToken,
               name: data.user.name,
-              avatar: imageUrl,
+              avatar: data?.user?.avatar,
             })
             .select();
           console.log('🚀 ~ onSubmit: ~ userData:', userData);
 
           if (!error) {
             setId(data?.user?.id);
-            setPendingVerification(true);
-            Toast.show({
-              type: 'success',
-              text1: 'Please check your email',
-              text2: 'A verification code has been sent ' + emailAddress,
-            });
+            // setPendingVerification(true);
+            // Toast.show({
+            //   type: 'success',
+            //   text1: 'Please check your email',
+            //   text2: 'A verification code has been sent ' + emailAddress,
+            // });
           }
 
           if (error) {
-            console.log(error);
+            console.log(JSON.stringify(error));
 
             Toast.show({
               type: 'error',
@@ -121,9 +137,10 @@ export default function SignUpScreen() {
       } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1: error?.response?.data.error,
+          text1: 'Something went wrong',
+          swipeable: true,
         });
-        console.log(error, 'Error');
+        console.log(error?.response?.data, 'Error');
       }
     },
   });
@@ -133,7 +150,34 @@ export default function SignUpScreen() {
   const setOtpInput = (text: any) => {
     setCode(text);
   };
+  const handleOtpChange = (value: string, index: number) => {
+    const newOtp = [...otp];
+    if (value === 'Backspace') {
+      if (!newOtp[index]) setActiveOtpIndex(index - 1);
+      setActiveOtpIndex(activeOtpIndex - 1);
+      newOtp[index] = '';
+    } else {
+      setActiveOtpIndex(index + 1);
+      newOtp[index] = value;
+    }
 
+    setOtp([...newOtp]);
+  };
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [activeOtpIndex]);
+  console.log(otp);
+
+  const handlePaste = (value: string) => {
+    if (value.length === 6) {
+      Keyboard.dismiss();
+      const newOtp = value.split('');
+      setOtp([...newOtp]);
+    }
+  };
   console.log(code);
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -152,9 +196,18 @@ export default function SignUpScreen() {
   }, [startTimer]);
   const onPressVerify = async () => {
     setVerifyingCode(true);
+    if (otp.every((digit) => digit === '')) {
+      return Toast.show({
+        type: 'info',
+        text1: 'To continue',
+        text2: 'Please enter OTP',
+        position: 'top',
+      });
+    }
+
     try {
       const { data } = await axios.post(
-        'https://workcloud-server.vercel.app/auth/verify-email',
+        'https://workserver-plum.vercel.app/auth/verify-email',
         {
           token: code,
           userId: id,
@@ -168,6 +221,7 @@ export default function SignUpScreen() {
         });
         setPendingVerification(false);
         setVerified(true);
+        setOtp([...array]);
         router.push('/');
       }
       console.log(data);
@@ -189,7 +243,7 @@ export default function SignUpScreen() {
     setStartTimer(true);
     try {
       const { data } = await axios.post(
-        'https://workcloud-server.vercel.app/auth/re-verify-email',
+        'https://workserver-plum.vercel.app/auth/re-verify-email',
         {
           userId: id,
         }
@@ -313,7 +367,6 @@ export default function SignUpScreen() {
               value={password}
               placeholder="Password..."
               placeholderTextColor="#000"
-              secureTextEntry={true}
               onChangeText={handleChange('password')}
             />
             {touched.password && errors.password && (
@@ -327,7 +380,6 @@ export default function SignUpScreen() {
               value={confirmPassword}
               placeholder="Confirm password..."
               placeholderTextColor="#000"
-              secureTextEntry={true}
               onChangeText={handleChange('confirmPassword')}
             />
             {touched.confirmPassword && errors.confirmPassword && (
@@ -363,13 +415,29 @@ export default function SignUpScreen() {
             />
           </SemiContainer> */}
           <View style={{ marginTop: 'auto', marginBottom: 100 }}>
-            <MyButton loading={isSubmitting} onPress={() => handleSubmit()}>
+            <Button
+              icon={
+                isSubmitting && (
+                  <ActivityIndicator
+                    style={{ marginRight: 10 }}
+                    size={20}
+                    color="white"
+                  />
+                )
+              }
+              titleStyle={{ fontFamily: 'PoppinsMedium' }}
+              buttonStyle={{
+                backgroundColor: colors.dialPad,
+                borderRadius: 5,
+              }}
+              onPress={() => handleSubmit()}
+            >
               Create account
-            </MyButton>
+            </Button>
           </View>
         </VStack>
       )}
-      {pendingVerification && (
+      {/* {pendingVerification && (
         <VStack flex={1} mb={20}>
           <VStack gap={5} mt={40}>
             <AuthTitle>Check your email</AuthTitle>
@@ -385,32 +453,40 @@ export default function SignUpScreen() {
             </Text>
           </VStack>
           <View style={{ marginTop: 20 }}>
-            <OTPTextView
-              ref={input}
-              textInputStyle={styles.textInputStyle}
-              handleTextChange={setOtpInput}
-              // handleCellTextChange={handleCellTextChange}
-              inputCount={5}
-              keyboardType="numeric"
-              tintColor={colors.dialPad}
-              offTintColor={colors.dialPad}
-              containerStyle={{
-                borderWidth: 0,
-              }}
-            />
+            <HStack>
+              {array.map((_, index) => (
+                <OtpInput
+                  onKeyPress={({ nativeEvent }) => {
+                    handleOtpChange(nativeEvent.key, index);
+                  }}
+                  ref={activeOtpIndex === index ? inputRef : null}
+                  key={index}
+                  keyboardType="numeric"
+                  value={otp[index] || ''}
+                  onChangeText={handlePaste}
+                />
+              ))}
+            </HStack>
           </View>
           <VStack gap={6} my={20}>
             <Text style={{ textAlign: 'center', fontFamily: 'PoppinsMedium' }}>
               Didn’t receive the code?{' '}
             </Text>
-            <MyButton
+
+            <Button
               disabled={resendingOtp || startTimer}
+              titleStyle={{
+                fontFamily: 'PoppinsMedium',
+                color: colors.dialPad,
+              }}
+              buttonStyle={{
+                backgroundColor: 'transparent',
+                borderRadius: 5,
+              }}
               onPress={resendOtp}
-              buttonColor="transparent"
-              textColor={colors.dialPad}
             >
               Resend
-            </MyButton>
+            </Button>
             {startTimer && (
               <Text
                 style={{
@@ -424,12 +500,28 @@ export default function SignUpScreen() {
             )}
           </VStack>
           <View style={{ marginTop: 'auto', marginBottom: 100 }}>
-            <MyButton loading={verifyingCode} onPress={onPressVerify}>
+            <Button
+              icon={
+                verifyingCode && (
+                  <ActivityIndicator
+                    style={{ marginRight: 10 }}
+                    size={20}
+                    color="white"
+                  />
+                )
+              }
+              titleStyle={{ fontFamily: 'PoppinsMedium' }}
+              buttonStyle={{
+                backgroundColor: colors.dialPad,
+                borderRadius: 5,
+              }}
+              onPress={onPressVerify}
+            >
               Verify
-            </MyButton>
+            </Button>
           </View>
         </VStack>
-      )}
+      )} */}
     </ScrollView>
   );
 }

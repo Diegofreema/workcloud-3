@@ -59,7 +59,7 @@ export const usePersonalOrgs = (id: any) => {
 export const useOtherOrgs = (id: string) => {
   const getOrgs = async () => {
     const { data } = await axios.get(
-      `https://workcloud-server.vercel.app/organization/other/${id}`
+      `https://workserver-plum.vercel.app/organization/other/${id}`
     );
 
     return data as Org[];
@@ -81,6 +81,7 @@ export const useProfile = (id: any) => {
       .single();
 
     return {
+      // @ts-ignore
       profile: data as Profile,
       error,
     };
@@ -237,7 +238,7 @@ export const usePendingRequest = (id: any) => {
   const getPending = async () => {
     const { data, error } = await supabase
       .from('request')
-      .select(`*, from (name, avatar, userId, email, organizationId(*))`)
+      .select(`*, to(*), from (name, avatar, userId, email, organizationId(*))`)
       .eq('to', id);
 
     return {
@@ -253,10 +254,15 @@ export const usePendingRequest = (id: any) => {
 
 export const useGetConnection = (id: any) => {
   const getConnections = async () => {
-    const { data } = await axios.get(
-      `https://workcloud-server.vercel.app/connections/all/${id}`
-    );
-    return data as ConnectionType;
+    const { data, error } = await supabase
+      .from('connections')
+      .select(`*, connectedTo (*, organizationId(*))`)
+      .eq('owner', id);
+
+    return {
+      connections: data as ConnectionType[],
+      error,
+    };
   };
   return useQuery({
     queryKey: ['connections', id],

@@ -13,7 +13,7 @@ export const Container = ({ children, flex }: Props): JSX.Element => {
     <View
       style={{
         flex: flex,
-        paddingHorizontal: 20,
+        marginHorizontal: 20,
         backgroundColor: darkMode ? 'black' : 'white',
       }}
     >
