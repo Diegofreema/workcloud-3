@@ -118,11 +118,13 @@ export default function SignUpScreen() {
           if (!error) {
             setId(data?.user?.id);
             // setPendingVerification(true);
-            // Toast.show({
-            //   type: 'success',
-            //   text1: 'Please check your email',
-            //   text2: 'A verification code has been sent ' + emailAddress,
-            // });
+            Toast.show({
+              type: 'success',
+              text1: 'Welcome to workcloud',
+              text2: 'Please log in to continue',
+            });
+            resetForm();
+            router.push('/');
           }
 
           if (error) {
@@ -135,12 +137,23 @@ export default function SignUpScreen() {
           }
         }
       } catch (error: any) {
+        if (
+          error?.response?.data?.error ===
+          'User already exists, Please use a different email'
+        ) {
+          return Toast.show({
+            type: 'info',
+            text1: 'User already exists',
+            text2: 'Please use a different email',
+          });
+        }
         Toast.show({
           type: 'error',
           text1: 'Something went wrong',
+          text2: 'Please try again later',
           swipeable: true,
         });
-        console.log(error?.response?.data, 'Error');
+        console.log(error, 'Error');
       }
     },
   });

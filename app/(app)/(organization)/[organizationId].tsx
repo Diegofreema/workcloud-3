@@ -142,8 +142,9 @@ const OrganizationDetails = (props: Props) => {
 
   const organization = organizations[0];
 
-  const startDay = organization.workDays.split('-')[0];
-  const endDay = organization.workDays.split('-')[1];
+  const startDay = organization?.workDays?.split('-')[0];
+  console.log('🚀 ~ OrganizationDetails ~ startDay:', startDay);
+  const endDay = organization?.workDays?.split('-')[1];
 
   return (
     <>
@@ -204,7 +205,7 @@ const OrganizationDetails = (props: Props) => {
                 style={{ borderRadius: 5 }}
                 labelStyle={{ fontFamily: 'PoppinsMedium', fontSize: 12 }}
               >
-                Edit organization
+                Edit
               </Button>
             )}
           </View>
@@ -262,7 +263,7 @@ const OrganizationDetails = (props: Props) => {
                     {organization?.start}
                   </Text>
                 </View>
-                <Text> — </Text>
+                <Text style={{ marginBottom: 8 }}> — </Text>
                 <View
                   style={{
                     backgroundColor: '#FFD9D9',
@@ -352,7 +353,7 @@ const OrganizationDetails = (props: Props) => {
               name="Posts"
             />
           </View>
-          <View
+          {/* <View
             style={{
               flexDirection: 'row',
               flexWrap: 'wrap',
@@ -378,7 +379,7 @@ const OrganizationDetails = (props: Props) => {
               uri={require('../../../assets/images/delete.png')}
               name="Delete WKS"
             />
-          </View>
+          </View> */}
         </ScrollView>
       </View>
     </>

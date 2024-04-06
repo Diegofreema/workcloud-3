@@ -32,7 +32,6 @@ export const BottomCard = ({ workId }: Props): JSX.Element => {
 
   const logout = () => {
     removeId();
-
     router.replace('/');
   };
   return (

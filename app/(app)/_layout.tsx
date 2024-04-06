@@ -3,7 +3,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StreamChat } from 'stream-chat';
 import { Chat, DeepPartial, OverlayProvider, Theme } from 'stream-chat-expo';
 import { useAuth, useUser } from '@clerk/clerk-expo';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useProfile } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
@@ -17,22 +17,27 @@ import { StatusBar } from 'expo-status-bar';
 const client = StreamChat.getInstance('cnvc46pm8uq9');
 
 export default function AppLayout() {
-  const { user } = useData();
-
+  const { id, getId } = useData();
+  const { data, refetch, isPaused, isPending, isError, isRefetching } =
+    useProfile(id as string);
   useEffect(() => {
+    if (!data?.profile) {
+      return;
+    }
     console.log('Use effect working');
-
+    const { profile } = data;
+    if (!profile) return;
     const connectUser = async () => {
       try {
         console.log('Connected to stream 1');
 
         await client.connectUser(
           {
-            id: user?.id.toString() as string,
-            name: user?.name,
-            image: user?.avatar,
+            id: profile?.userId.toString() as string,
+            name: profile?.name,
+            image: profile?.avatar,
           },
-          user?.streamToken
+          profile?.streamToken
         );
         console.log('Connected to stream 2');
       } catch (error) {
@@ -45,7 +50,7 @@ export default function AppLayout() {
       client.disconnectUser();
       console.log('User disconnected');
     };
-  }, [client, user]);
+  }, [client, data?.profile]);
 
   const chatTheme: DeepPartial<Theme> = {
     channelPreview: {
@@ -55,8 +60,22 @@ export default function AppLayout() {
     },
   };
 
-  if (!user) {
-    return <Redirect href="/login" />;
+  const getUserStored = useCallback(() => {
+    getId();
+  }, []);
+
+  useEffect(() => {
+    getUserStored();
+  }, []);
+  if (isError || isPaused) {
+    return <ErrorComponent refetch={refetch} />;
+  }
+
+  if (isPending) {
+    return <LoadingComponent />;
+  }
+  if (!id) {
+    return <Redirect href={'/'} />;
   }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

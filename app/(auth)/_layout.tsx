@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native';
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 import { useData } from '@/hooks/useData';
@@ -8,9 +8,17 @@ import { StatusBar } from 'expo-status-bar';
 type Props = {};
 
 const AuthLayout = (props: Props) => {
-  const { user } = useData();
+  const { getId, id, user } = useData();
+  console.log('🚀 ~ file: _layout.tsx:AuthLayout ~ user:', user, 'id', id);
 
-  if (user?.id) {
+  const getUserStored = useCallback(() => {
+    getId();
+  }, []);
+  useEffect(() => {
+    getUserStored();
+  }, []);
+
+  if (id) {
     return <Redirect href={'/home'} />;
   }
 

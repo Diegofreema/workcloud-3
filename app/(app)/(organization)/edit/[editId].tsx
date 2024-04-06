@@ -159,15 +159,14 @@ const Edit = (props: Props) => {
           ...values,
           email: data?.email,
           category: data?.category,
-          endDay: data?.end,
           location: data?.location,
           organizationName: data?.name,
-          startDay: data?.start,
           description: data?.description,
           websiteUrl: data?.website,
-          startTime: data?.workDays.split(' - ')[0],
-          endTime: data?.workDays.split(' - ')[1],
+          startTime: data?.workDays.split('-')[0],
+          endTime: data?.workDays.split('-')[1],
         });
+
         setOrgId(data?.id);
         setImage(data?.avatar);
       }
@@ -357,95 +356,98 @@ const Edit = (props: Props) => {
               </Text>
             )}
           </>
-          <>
-            <Text style={{ marginBottom: 5, fontFamily: 'PoppinsMedium' }}>
-              Work Days
-            </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                gap: 10,
-                width: '100%',
-              }}
-            >
-              <>
-                <SelectList
-                  search={false}
-                  boxStyles={{
-                    ...styles2.border,
-                    width: '100%',
-                  }}
-                  inputStyles={{
-                    textAlign: 'left',
-                    fontSize: 14,
-                    borderWidth: 0,
-                  }}
-                  fontFamily="PoppinsMedium"
-                  setSelected={handleChange('gender')}
-                  data={days}
-                  defaultOption={{ key: 'monday', value: 'Monday' }}
-                  save="key"
-                  placeholder="Select your state"
-                />
-              </>
-              <>
-                <SelectList
-                  search={false}
-                  boxStyles={{
-                    ...styles2.border,
-                    justifyContent: 'flex-start',
-                    backgroundColor: '#E9E9E9',
-                    width: '100%',
-                  }}
-                  inputStyles={{ textAlign: 'left', fontSize: 14 }}
-                  fontFamily="PoppinsMedium"
-                  setSelected={handleChange('gender')}
-                  data={days}
-                  defaultOption={{ key: 'friday', value: 'Friday' }}
-                  save="key"
-                  placeholder="Select your state"
-                />
-              </>
-            </View>
-          </>
         </View>
+
         <>
-          <Text
+          <Text style={{ marginBottom: 5, fontFamily: 'PoppinsMedium' }}>
+            Work Days
+          </Text>
+          <View
             style={{
-              marginBottom: 5,
-              fontFamily: 'PoppinsBold',
-              marginTop: 10,
+              flexDirection: 'row',
+              gap: 10,
+              width: '100%',
             }}
           >
+            <>
+              <SelectList
+                search={false}
+                boxStyles={{
+                  ...styles2.border,
+                  width: '100%',
+                }}
+                inputStyles={{
+                  textAlign: 'left',
+                  fontSize: 14,
+                  borderWidth: 0,
+                }}
+                fontFamily="PoppinsMedium"
+                setSelected={handleChange('startDay')}
+                data={days}
+                defaultOption={{ key: 'monday', value: 'Monday' }}
+                save="key"
+                placeholder="Select your state"
+              />
+            </>
+            <>
+              <SelectList
+                search={false}
+                boxStyles={{
+                  ...styles2.border,
+                  justifyContent: 'flex-start',
+                  backgroundColor: '#E9E9E9',
+                  width: '100%',
+                }}
+                inputStyles={{ textAlign: 'left', fontSize: 14 }}
+                fontFamily="PoppinsMedium"
+                setSelected={handleChange('endDay')}
+                data={days}
+                defaultOption={{ key: 'friday', value: 'Friday' }}
+                save="key"
+                placeholder="Select your state"
+              />
+            </>
+          </View>
+        </>
+        <>
+          <Text style={{ marginBottom: 5, fontFamily: 'PoppinsMedium' }}>
             Opening And Closing Time
           </Text>
-          <View style={{ flexDirection: 'row', gap: 10, width: '100%' }}>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
             <>
-              <InputComponent
-                style={{}}
-                value={values.startTime}
-                onChangeText={handleChange('startTime')}
-                placeholder="Opening"
-                keyboardType="default"
-              />
+              <Pressable onPress={showMode} style={styles2.border}>
+                <Text> {`${format(start, 'HH:mm') || ' Opening Time'}`} </Text>
+              </Pressable>
 
-              {errors.startTime && (
-                <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                  {errors.startTime}
-                </Text>
+              {show && (
+                <DateTimePicker
+                  display="spinner"
+                  testID="dateTimePicker"
+                  value={start}
+                  mode={'time'}
+                  is24Hour={true}
+                  onChange={(event, selectedDate) =>
+                    onChange(event, selectedDate, 'startTime')
+                  }
+                />
               )}
             </>
             <>
-              <InputComponent
-                value={values.endTime}
-                onChangeText={handleChange('endTime')}
-                placeholder="Closing Time"
-                keyboardType="default"
-              />
-              {errors.endTime && (
-                <Text style={{ color: 'red', fontWeight: 'bold' }}>
-                  {errors.endTime}
-                </Text>
+              <Pressable onPress={showMode2} style={styles2.border}>
+                <Text>{`${format(end, 'HH:MM') || ' Closing Time'}`} </Text>
+              </Pressable>
+
+              {show2 && (
+                <DateTimePicker
+                  display="spinner"
+                  testID="dateTimePicker"
+                  value={end}
+                  mode={'time'}
+                  is24Hour={true}
+                  onChange={(event, selectedDate) =>
+                    onChange(event, selectedDate, 'endTime')
+                  }
+                />
               )}
             </>
           </View>

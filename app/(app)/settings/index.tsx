@@ -10,10 +10,6 @@ import { MyText } from '../../../components/Ui/MyText';
 
 const links = [
   {
-    text: 'Set qualifications',
-    href: '/settings/set-qualification',
-  },
-  {
     text: 'Change password',
     href: '/settings/change-password',
   },

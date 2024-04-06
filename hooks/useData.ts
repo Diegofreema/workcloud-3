@@ -12,6 +12,7 @@ type UserType = {
   id: string;
   user: PartialUser | null;
   getUserId: (user: PartialUser) => void;
+  getId: () => void;
   removeId: () => void;
 };
 
@@ -21,8 +22,14 @@ export const useData = create<UserType>((set) => ({
   getUserId: (user: PartialUser) => {
     set({ user, id: user.id });
     SecureStore.setItem('id', user.id);
+    const stringifyUser = JSON.stringify(user);
+    SecureStore.setItem('user', stringifyUser);
   },
   removeId: async () => {
     set({ user: null, id: '' });
+    await SecureStore.deleteItemAsync('id');
+  },
+  getId: () => {
+    set((state) => ({ ...state, id: SecureStore.getItem('id') || '' }));
   },
 }));

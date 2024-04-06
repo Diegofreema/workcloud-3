@@ -15,7 +15,7 @@ import {
   useWorkers,
 } from '../../../lib/queries';
 import { Text } from 'react-native-paper';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDarkMode } from '../../../hooks/useDarkMode';
 import { useOrganizationModal } from '../../../hooks/useOrganizationModal';
 import { OrganizationModal } from '../../../components/OrganizationModal';
@@ -29,18 +29,46 @@ import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCreateProfile } from '@/lib/mutations';
 import { useData } from '@/hooks/useData';
-import { ConnectionType } from '../../../constants/types';
+import { ConnectionType, Profile } from '../../../constants/types';
 import { format, formatDistanceToNow } from 'date-fns';
 import { EmptyText } from '@/components/EmptyText';
 import { Item } from '@/components/Item';
+import { supabase } from '@/lib/supabase';
 
 export default function TabOneScreen() {
   const router = useRouter();
-  const { user: profile, id } = useData();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const { id } = useData();
   // console.log('🚀 ~ TabOneScreen ~ id:', id);
+  const queryClient = useQueryClient();
 
-  const { data, refetch, isPaused, isPending, isError, isRefetching } =
-    useProfile(profile?.id as string);
+  const profileData = useMemo(async () => {
+    try {
+      const getProfile = async () => {
+        const { data, error } = await supabase
+          .from('user')
+          .select(
+            `name, avatar, streamToken, email, userId, organizationId (*), workerId (*)`
+          )
+          .eq('userId', id)
+          .single();
+        // @ts-ignore
+        setProfile(data);
+        return data;
+      };
+      const res = await queryClient.fetchQuery({
+        queryKey: ['profile', id],
+        queryFn: getProfile,
+      });
+
+      return res;
+    } catch (error) {
+      console.log(error);
+      return {};
+    }
+  }, [id]);
+
+  console.log('🚀 ~ TabOneScreen ~ profileData:', profile);
 
   const {
     data: connections,
@@ -50,43 +78,41 @@ export default function TabOneScreen() {
     isPending: isPendingConnections,
     error,
     isPaused: isConnectionsPaused,
-  } = useGetConnection(profile?.id);
-  console.log(data?.error, 'err');
+  } = useGetConnection(id);
+
   const { onOpen } = useOrganizationModal();
   const handleRefetch = () => {
-    refetch();
     refetchConnections();
-    // refetchWorkerProfile();
-    // refetchOrgs();
   };
-  console.log(data?.profile?.workerId?.id, data?.profile?.organizationId?.id);
 
   useEffect(() => {
-    if (!data?.profile?.organizationId?.id && !data?.profile?.workerId?.id) {
+    if (!profile?.organizationId?.id && profile?.workerId?.id) {
       onOpen();
     }
-  }, [data]);
+  }, [profile?.organizationId?.id, profile?.workerId?.id]);
 
-  if (isError || isPaused || isErrorConnections || isConnectionsPaused) {
+  if (isErrorConnections || isConnectionsPaused) {
     return <ErrorComponent refetch={handleRefetch} />;
   }
 
-  if (isPending || isPendingConnections) {
+  if (isPendingConnections) {
     return <LoadingComponent />;
   }
 
-  const { profile: user, error: err } = data;
+  // const { profile: user, error: err } = data;
   const { connections: connectionsData } = connections;
-
+  if (!profile) {
+    return <LoadingComponent />;
+  }
   return (
     <View style={[defaultStyle, styles.container]}>
       <OrganizationModal />
       <Header />
       <ProfileHeader
-        id={user?.userId}
-        avatar={user?.avatar}
-        name={user?.name}
-        email={user?.email}
+        id={profile?.userId}
+        avatar={profile?.avatar}
+        name={profile?.name}
+        email={profile?.email}
       />
 
       <View style={{ marginVertical: 10 }}>
@@ -95,7 +121,7 @@ export default function TabOneScreen() {
 
       <FlatList
         onRefresh={handleRefetch}
-        refreshing={isRefetching}
+        refreshing={isRefetchingConnections}
         contentContainerStyle={{
           gap: 15,
 

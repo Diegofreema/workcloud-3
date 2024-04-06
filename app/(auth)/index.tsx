@@ -165,7 +165,7 @@ export default function SignInScreen() {
 
         if (data?.user) {
           getUserId(data?.user);
-          router.replace('/home');
+          // router.replace('/home');
         }
       } catch (error: any) {
         Toast.show({
@@ -173,7 +173,7 @@ export default function SignInScreen() {
           text1: 'An error occurred',
           text2: error.response.data.error,
         });
-        return console.log(error);
+        console.log(error);
       }
     },
   });
@@ -218,7 +218,7 @@ export default function SignInScreen() {
             placeholder="Password"
             value={password}
             onChangeText={handleChange('password')}
-            secureTextEntry={true}
+            // secureTextEntry={true}
           />
           {touched.password && errors.password && (
             <Text style={{ color: 'red', fontWeight: 'bold' }}>

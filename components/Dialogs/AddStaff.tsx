@@ -17,7 +17,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAddStaff } from '@/hooks/useAddStaff';
 
-const roles = [{ role: 'Add self to workspace' }, { role: 'Add new staff' }];
+const roles = [{ role: 'Add new staff' }];
 export const AddStaff = () => {
   const { isOpen, onClose } = useAddStaff();
   const { onOpen: onOpenSelectRowModal } = useSelectNewRow();

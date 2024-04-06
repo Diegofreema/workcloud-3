@@ -7,7 +7,7 @@ import {
   Pressable,
   ScrollView,
 } from 'react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useGetOrg, useOrgsWorkers } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
@@ -22,10 +22,12 @@ import { WorkerWithWorkspace } from '@/constants/types';
 import { supabase } from '@/lib/supabase';
 import { useData } from '@/hooks/useData';
 import Toast from 'react-native-toast-message';
+import { EmptyText } from '@/components/EmptyText';
 
 type Props = {};
 
 const Reception = (props: Props) => {
+  const { id: userId } = useData();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, isPending, error, refetch, isPaused } = useGetOrg(id);
   const {
@@ -35,7 +37,16 @@ const Reception = (props: Props) => {
     refetch: refetchWorkers,
     isPaused: isPausedWorkers,
   } = useOrgsWorkers(data?.org?.id);
-
+  useEffect(() => {
+    if (data?.org?.ownerId === userId) return;
+    const createConnection = async () => {
+      const { error } = await supabase.from('connections').insert({
+        owner: userId,
+        connectedTo: data?.org?.id,
+      });
+    };
+    createConnection();
+  }, [data?.org?.id, userId]);
   const handleRefetch = () => {
     refetch();
     refetchWorkers();
@@ -131,8 +142,6 @@ const styles = StyleSheet.create({
 });
 
 const Representatives = ({ data }: { data: WorkerWithWorkspace[] }) => {
-  console.log('🚀 ~ Representatives ~ data:', data[0].workspaceId);
-
   return (
     <FlatList
       ListHeaderComponent={() => (
@@ -150,6 +159,7 @@ const Representatives = ({ data }: { data: WorkerWithWorkspace[] }) => {
       scrollEnabled={false}
       data={data}
       renderItem={({ item }) => <RepresentativeItem item={item} />}
+      ListEmptyComponent={() => <EmptyText text="No representatives yet" />}
     />
   );
 };
@@ -192,7 +202,7 @@ const RepresentativeItem = ({ item }: { item: WorkerWithWorkspace }) => {
           {item?.role}
         </MyText>
 
-        {item?.workspaceId?.active && (
+        {item?.workspaceId && item?.workspaceId?.active && (
           <View
             style={{
               backgroundColor: colors.openTextColor,
@@ -210,7 +220,7 @@ const RepresentativeItem = ({ item }: { item: WorkerWithWorkspace }) => {
             </MyText>
           </View>
         )}
-        {!item?.workspaceId?.active && (
+        {item?.workspaceId && !item?.workspaceId?.active && (
           <View
             style={{
               backgroundColor: colors.closeTextColor,

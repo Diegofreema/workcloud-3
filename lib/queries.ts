@@ -56,13 +56,18 @@ export const usePersonalOrgs = (id: any) => {
   });
 };
 
-export const useOtherOrgs = (id: string) => {
+export const useOtherOrgs = (id: any) => {
   const getOrgs = async () => {
-    const { data } = await axios.get(
-      `https://workserver-plum.vercel.app/organization/other/${id}`
-    );
+    const { data, error } = await supabase
+      .from('workspace')
+      .select('*, organizationId(*)')
+      .eq('workerId', id)
+      .single();
 
-    return data as Org[];
+    return {
+      workspace: data as WK,
+      error,
+    };
   };
   return useQuery({
     queryKey: ['organizationOther'],

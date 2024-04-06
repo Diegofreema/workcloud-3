@@ -169,6 +169,8 @@ const CreateWorkSpace = (props: Props) => {
     description,
     websiteUrl,
   } = values;
+  console.log(values);
+
   return (
     <ScrollView
       style={[defaultStyle, { flex: 1 }]}
@@ -332,7 +334,7 @@ const CreateWorkSpace = (props: Props) => {
                     borderWidth: 0,
                   }}
                   fontFamily="PoppinsMedium"
-                  setSelected={handleChange('gender')}
+                  setSelected={handleChange('startDay')}
                   data={days}
                   defaultOption={{ key: 'monday', value: 'Monday' }}
                   save="key"
@@ -350,7 +352,7 @@ const CreateWorkSpace = (props: Props) => {
                   }}
                   inputStyles={{ textAlign: 'left', fontSize: 14 }}
                   fontFamily="PoppinsMedium"
-                  setSelected={handleChange('gender')}
+                  setSelected={handleChange('endDay')}
                   data={days}
                   defaultOption={{ key: 'friday', value: 'Friday' }}
                   save="key"
@@ -374,6 +376,7 @@ const CreateWorkSpace = (props: Props) => {
 
                 {show && (
                   <DateTimePicker
+                    display="spinner"
                     testID="dateTimePicker"
                     value={startTime}
                     mode={'time'}
@@ -394,6 +397,7 @@ const CreateWorkSpace = (props: Props) => {
 
                 {show2 && (
                   <DateTimePicker
+                    display="spinner"
                     testID="dateTimePicker"
                     value={endTime}
                     mode={'time'}

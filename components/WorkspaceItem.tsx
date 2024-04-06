@@ -6,27 +6,21 @@ import { useDarkMode } from '../hooks/useDarkMode';
 import { useRouter } from 'expo-router';
 
 export const WorkspaceItem = ({
-  avatar,
-  name,
-  ownerId,
+  item,
+  onPress,
 }: {
-  avatar: string;
-  name: string;
-  ownerId?: string;
+  item: Organization;
+  onPress?: () => void;
 }) => {
-  console.log('🚀 ~ WorkspaceItem ~ avatar, name:', avatar, name, ownerId);
   const { darkMode } = useDarkMode();
   const router = useRouter();
   return (
     <Pressable
-      onPress={() =>
-        /* @ts-ignore */
-        router.push(`/(organization)/${ownerId}`)
-      }
+      onPress={onPress}
       style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}
     >
       <Image
-        source={{ uri: avatar }}
+        source={{ uri: item?.avatar }}
         style={{
           width: 50,
           height: 50,
@@ -44,7 +38,7 @@ export const WorkspaceItem = ({
           textTransform: 'capitalize',
         }}
       >
-        {name}
+        {item?.name}
       </Text>
     </Pressable>
   );

@@ -1,12 +1,10 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Button, Dialog, Portal, Text } from 'react-native-paper';
+import { Button, Dialog, Portal } from 'react-native-paper';
 import { useOrganizationModal } from '../hooks/useOrganizationModal';
-import { useUser } from '@clerk/clerk-expo';
 import { Feather } from '@expo/vector-icons';
 import { colors } from '../constants/Colors';
 import { useRouter } from 'expo-router';
 import { MyText } from './Ui/MyText';
-import { useData } from '@/hooks/useData';
 
 type Props = {};
 
@@ -72,7 +70,10 @@ export const OrganizationModal = ({}: Props): JSX.Element => {
               textColor={colors.buttonBlue}
               mode="elevated"
               onPress={connectToOrganization}
-              labelStyle={{ fontFamily: 'PoppinsLight' }}
+              labelStyle={{ fontFamily: 'PoppinsBold', fontSize: 12 }}
+              contentStyle={{
+                width: '100%',
+              }}
             >
               Connect To An Organization
             </Button>
@@ -104,5 +105,6 @@ export const OrganizationModal = ({}: Props): JSX.Element => {
 const styles = StyleSheet.create({
   dialog: {
     backgroundColor: 'white',
+    paddingHorizontal: 10,
   },
 });
