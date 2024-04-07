@@ -4,26 +4,54 @@ import {
   StreamVideoClient,
   User,
 } from '@stream-io/video-react-native-sdk';
-import { PropsWithChildren, useEffect } from 'react';
+import { PropsWithChildren, useEffect, useState } from 'react';
 import { useData } from '@/hooks/useData';
-type Props = {};
+import { Profile } from '@/constants/types';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from './supabase';
+
 const apiKey = process.env.EXPO_PUBLIC_STREAM_API_KEY!;
 
 const client = new StreamVideoClient({ apiKey });
-export const StreamClientProvider = ({
-  children,
-}: PropsWithChildren): JSX.Element => {
-  const { user } = useData();
+type Props = {
+  children: React.ReactNode;
+};
+export const StreamClientProvider = ({ children }: Props): JSX.Element => {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const queryClient = useQueryClient();
+  const { id } = useData();
   useEffect(() => {
-    if (!user) return;
+    const fetchProfile = async () => {
+      const { data, error } = await supabase
+        .from('user')
+        .select(
+          `name, avatar, streamToken, email, userId, organizationId (*), workerId (*)`
+        )
+        .eq('userId', id)
+        .single();
+
+      return data;
+    };
+    const getProfile = async () => {
+      const data = await queryClient.fetchQuery({
+        queryKey: ['profile', id],
+        queryFn: fetchProfile,
+      });
+      // @ts-ignore
+      setProfile(data);
+    };
+    getProfile();
+  }, []);
+  useEffect(() => {
+    if (!profile) return;
     const onConnectUser = async () => {
       await client.connectUser(
         {
-          id: user.id,
-          name: user.name,
-          image: user.avatar,
+          id: profile.userId.toString(),
+          name: profile.name,
+          image: profile.avatar,
         },
-        user?.streamToken
+        profile?.streamToken
       );
     };
 
@@ -32,7 +60,7 @@ export const StreamClientProvider = ({
     return () => {
       client.disconnectUser();
     };
-  }, [user, client]);
+  }, [profile, client]);
   return <StreamVideo client={client}>{children}</StreamVideo>;
 };
 

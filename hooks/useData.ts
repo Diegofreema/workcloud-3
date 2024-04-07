@@ -17,10 +17,10 @@ type UserType = {
 };
 
 export const useData = create<UserType>((set) => ({
-  user: null,
+  user: JSON.parse(SecureStore.getItem('user') || '{}') || null,
   id: SecureStore.getItem('id') || '',
   getUserId: (user: PartialUser) => {
-    set({ user, id: user.id });
+    set({ user: user, id: user.id });
     SecureStore.setItem('id', user.id);
     const stringifyUser = JSON.stringify(user);
     SecureStore.setItem('user', stringifyUser);

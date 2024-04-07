@@ -7,7 +7,7 @@ import { MyText } from './MyText';
 
 import { colors } from '@/constants/Colors';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { supabase } from '@/lib/supabase';
 import Toast from 'react-native-toast-message';
 import { Button } from 'react-native-paper';
@@ -124,8 +124,8 @@ export const UserPreview = ({
 export const WorkPreview = ({ item }: { item: Requests }) => {
   console.log('🚀 ~ WorkPreview ~ item:', item);
 
-  const [pending, startTransition] = useTransition();
-  const [cancelling, startTransitionCancelling] = useTransition();
+  const [cancelling, setCancelling] = useState(false);
+  const [accepting, setAccepting] = useState(false);
   const {
     created_at,
     id,
@@ -141,6 +141,7 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
   const queryClient = useQueryClient();
 
   const acceptRequest = async () => {
+    setAccepting(true);
     try {
       const { error } = await supabase
         .from('workspace')
@@ -190,19 +191,13 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
         type: 'error',
         text1: 'Something went wrong',
       });
+    } finally {
+      setAccepting(false);
     }
   };
-  const handleAccept = () => {
-    startTransition(() => {
-      acceptRequest();
-    });
-  };
-  const handleReject = () => {
-    startTransitionCancelling(() => {
-      rejectRequest();
-    });
-  };
+
   const rejectRequest = async () => {
+    setCancelling(true);
     try {
       const { error } = await supabase.from('request').delete().eq('id', id);
 
@@ -236,63 +231,71 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
         type: 'error',
         text1: 'Something went wrong',
       });
+    } finally {
+      setCancelling(false);
     }
   };
 
   return (
     <VStack pr={20}>
-      <HStack gap={10} alignItems="flex-start">
+      <VStack
+        mr={10}
+        width={'90%'}
+        justifyContent="space-between"
+        alignItems="center"
+        gap={10}
+      >
         <Image
-          source={{ uri: from?.organizationId?.avatar }}
+          source={{
+            uri: from?.organizationId?.avatar || 'https://placehold.co/100x100',
+          }}
           style={{ width: 60, height: 60, borderRadius: 9999 }}
           contentFit="cover"
         />
-        <VStack mr={10} width={'90%'}>
-          <MyText
-            style={{ color: 'black', width: '100%' }}
-            poppins="Medium"
-            fontSize={14}
-          >
-            {from?.organizationId?.name} wants you to be a representative on
-            their workspace
-          </MyText>
-          <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
-            Role : {role}
-          </MyText>
-          <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
-            Responsibility : {responsibility}
-          </MyText>
-          <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
-            Qualities : {qualities}
-          </MyText>
-          <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
-            Payment: {salary} naira
-          </MyText>
+        <MyText
+          style={{ color: 'black', width: '100%' }}
+          poppins="Medium"
+          fontSize={14}
+        >
+          {from?.organizationId?.name} wants you to be a representative on their
+          workspace
+        </MyText>
+        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+          Role : {role}
+        </MyText>
+        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+          Responsibility : {responsibility}
+        </MyText>
+        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+          Qualities : {qualities}
+        </MyText>
+        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+          Payment: {salary} naira
+        </MyText>
 
-          <HStack gap={10} mt={20}>
-            <Button
-              contentStyle={{ backgroundColor: '#C0D1FE', borderRadius: 5 }}
-              style={{ borderRadius: 5 }}
-              loading={cancelling}
-              onPress={handleReject}
-            >
-              <Text style={{ color: '#0047FF', fontFamily: 'PoppinsMedium' }}>
-                Decline
-              </Text>
-            </Button>
-            <Button
-              contentStyle={{ backgroundColor: '#0047FF' }}
-              style={{ borderRadius: 5 }}
-              loading={pending}
-              onPress={handleAccept}
-            >
-              <Text style={{ color: 'white', fontFamily: 'PoppinsMedium' }}>
-                Accept
-              </Text>
-            </Button>
-          </HStack>
-        </VStack>
-      </HStack>
+        <HStack gap={10} mt={20}>
+          <Button
+            contentStyle={{ backgroundColor: '#C0D1FE', borderRadius: 5 }}
+            style={{ borderRadius: 5 }}
+            loading={cancelling}
+            onPress={rejectRequest}
+          >
+            <Text style={{ color: '#0047FF', fontFamily: 'PoppinsMedium' }}>
+              Decline
+            </Text>
+          </Button>
+          <Button
+            contentStyle={{ backgroundColor: '#0047FF' }}
+            style={{ borderRadius: 5 }}
+            loading={accepting}
+            onPress={acceptRequest}
+          >
+            <Text style={{ color: 'white', fontFamily: 'PoppinsMedium' }}>
+              Accept
+            </Text>
+          </Button>
+        </HStack>
+      </VStack>
     </VStack>
   );
 };

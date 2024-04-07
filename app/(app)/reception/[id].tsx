@@ -23,11 +23,13 @@ import { supabase } from '@/lib/supabase';
 import { useData } from '@/hooks/useData';
 import Toast from 'react-native-toast-message';
 import { EmptyText } from '@/components/EmptyText';
+import { useQueryClient } from '@tanstack/react-query';
 
 type Props = {};
 
 const Reception = (props: Props) => {
   const { id: userId } = useData();
+  const queryClient = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, isPending, error, refetch, isPaused } = useGetOrg(id);
   const {
@@ -42,11 +44,16 @@ const Reception = (props: Props) => {
     const createConnection = async () => {
       const { error } = await supabase.from('connections').insert({
         owner: userId,
-        connectedTo: data?.org?.id,
+        connectedTo: id,
       });
+      if (!error) {
+        queryClient.invalidateQueries({
+          queryKey: ['connections', userId],
+        });
+      }
     };
     createConnection();
-  }, [data?.org?.id, userId]);
+  }, [id, userId]);
   const handleRefetch = () => {
     refetch();
     refetchWorkers();

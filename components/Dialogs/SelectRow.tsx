@@ -14,11 +14,42 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useData } from '@/hooks/useData';
 
 const roles = [
-  { role: 'Customer service' },
-  { role: 'Sales Representative' },
-  { role: 'Account opening processor' },
-  { role: 'Logistics' },
-  { role: 'ICT Processor' },
+  'Manager',
+  'Consultant',
+  'Team Leader',
+  'Business Analyst',
+  'Project Manager',
+  'Developer',
+  'Designer',
+  'Dentist',
+  'Content Creator',
+  'Marketer',
+  'Sales Representative',
+  'Customer Support',
+  'Human Resources Manager',
+  'Finance Manager',
+  'IT Support Specialist',
+  'Operations Manager',
+  'Legal Counsel',
+  'Quality Assurance Analyst',
+  'Data Analyst',
+  'Researcher',
+  'Trainer',
+  'Executive',
+  'Agent',
+  'Advisor',
+  'Therapist',
+  'Health Consultant',
+  'Entrepreneur',
+  'Publicist',
+  'Risk Manager',
+  'Control',
+  'Auditor',
+  'Account Officer',
+  'Help Desk',
+  'Complaint Desk',
+  'ICT Support',
+  'Customers Support',
 ];
 export const SelectRow = ({ organizationId }: { organizationId: number }) => {
   const { isOpen, onClose } = useSelectRow();
@@ -84,10 +115,10 @@ export const SelectRow = ({ organizationId }: { organizationId: number }) => {
               showsVerticalScrollIndicator={false}
               data={roles}
               ItemSeparatorComponent={() => <Divider style={styles.divider} />}
-              keyExtractor={(item) => item.role}
+              keyExtractor={(item, index) => index.toString()}
               renderItem={({ item }) => (
                 <Pressable
-                  onPress={() => createWorkspace(item.role)}
+                  onPress={() => createWorkspace(item)}
                   style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
                 >
                   <HStack
@@ -96,7 +127,7 @@ export const SelectRow = ({ organizationId }: { organizationId: number }) => {
                     p={10}
                   >
                     <MyText fontSize={13} poppins="Medium">
-                      {item.role}
+                      {item}
                     </MyText>
                   </HStack>
                 </Pressable>

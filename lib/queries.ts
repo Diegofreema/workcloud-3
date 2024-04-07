@@ -70,7 +70,7 @@ export const useOtherOrgs = (id: any) => {
     };
   };
   return useQuery({
-    queryKey: ['organizationOther'],
+    queryKey: ['assignedWk'],
     queryFn: async () => getOrgs(),
   });
 };

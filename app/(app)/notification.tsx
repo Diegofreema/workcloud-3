@@ -39,7 +39,7 @@ const Notification = (props: Props) => {
       <HeaderNav title="Notifications" />
       <FlatList
         style={{ marginTop: 10 }}
-        ListEmptyComponent={() => <EmptyText text="No pending request" />}
+        ListEmptyComponent={() => <EmptyText text="No pending notifications" />}
         ItemSeparatorComponent={() => (
           <Divider
             style={{ height: 10, backgroundColor: '#ccc', width: '100%' }}

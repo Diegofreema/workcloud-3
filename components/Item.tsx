@@ -10,7 +10,7 @@ import { useChatContext } from 'stream-chat-expo';
 import { useRouter } from 'expo-router';
 import { ConnectionType } from '../constants/types';
 
-export const Item = (item: ConnectionType & { isLastItemOnList: boolean }) => {
+export const Item = (item: ConnectionType & { isLastItemOnList?: boolean }) => {
   const router = useRouter();
   const startChannel = async () => {
     router.push(`/reception/${item?.connectedTo?.organizationId?.id}`);

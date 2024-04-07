@@ -13,13 +13,23 @@ import axios from 'axios';
 import { Person } from '@/constants/types';
 import { useData } from '@/hooks/useData';
 import { StatusBar } from 'expo-status-bar';
+import { StreamVideoClient } from '@stream-io/video-react-native-sdk';
 
-const client = StreamChat.getInstance('cnvc46pm8uq9');
+const api = 'cnvc46pm8uq9';
+const client = StreamChat.getInstance(api);
 
 export default function AppLayout() {
-  const { id, getId } = useData();
+  const { id, getId, user } = useData();
+  const userProfile = {
+    id: user?.id as string,
+    name: user?.name as string,
+  };
+  const token: string = user?.streamToken as string;
+
   const { data, refetch, isPaused, isPending, isError, isRefetching } =
     useProfile(id as string);
+  console.log('🚀 ~ file: _layout.tsx:AppLayout ~ data:', data?.profile);
+
   useEffect(() => {
     if (!data?.profile) {
       return;
@@ -50,8 +60,32 @@ export default function AppLayout() {
       client.disconnectUser();
       console.log('User disconnected');
     };
-  }, [client, data?.profile]);
+  }, [client, data?.profile?.userId]);
 
+  // useEffect(() => {
+  //     if (!data?.profile) {
+  //     return;
+  //   }
+  //   console.log('Use effect working');
+  //   const { profile } = data;
+  //   if (!profile) return;
+  //   const onConnectUser = async () => {
+  //     await clientVideo.connectUser(
+  //       {
+  //         id: profile.userId.toString(),
+  //         name: profile.name,
+  //         image: profile.avatar,
+  //       },
+  //       profile?.streamToken
+  //     );
+  //   };
+
+  //   onConnectUser();
+
+  //   return () => {
+  //     clientVideo.disconnectUser();
+  //   };
+  // }, [data?.profile?.userId, clientVideo]);
   const chatTheme: DeepPartial<Theme> = {
     channelPreview: {
       container: {

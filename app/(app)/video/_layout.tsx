@@ -6,9 +6,8 @@ const VideoLayout = () => {
   return (
     <>
       <StatusBar style="dark" />
-      <StreamClientProvider>
-        <Stack />
-      </StreamClientProvider>
+
+      <Stack />
     </>
   );
 };

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from 'react-native-paper';
 import { fontFamily } from '../../../constants';
 import { StatusBar } from 'expo-status-bar';
+import { StreamClientProvider } from '@/lib/stream';
 
 /**
  * You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/

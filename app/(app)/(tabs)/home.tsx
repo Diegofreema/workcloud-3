@@ -124,7 +124,6 @@ export default function TabOneScreen() {
         refreshing={isRefetchingConnections}
         contentContainerStyle={{
           gap: 15,
-
           paddingBottom: 50,
         }}
         data={connectionsData}

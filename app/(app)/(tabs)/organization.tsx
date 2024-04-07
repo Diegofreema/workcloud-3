@@ -21,6 +21,8 @@ import { router } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { HStack, VStack } from '@gluestack-ui/themed';
 import { WK } from '@/constants/types';
+import { MyText } from '@/components/Ui/MyText';
+import Toast from 'react-native-toast-message';
 
 type Props = {};
 
@@ -58,7 +60,17 @@ const workspace = (props: Props) => {
   const { organizations } = data;
   const organization = organizations[0];
   console.log(otherOrgs.workspace, 'dsccsdcds');
-
+  const handlePress = () => {
+    if (otherOrgs?.workspace?.locked) {
+      Toast.show({
+        type: 'info',
+        text1: 'This workspace is locked',
+        text2: 'Please ask the admin to unlock it',
+      });
+      return;
+    }
+    router.replace(`/wk/${otherOrgs?.workspace?.id}`);
+  };
   return (
     <View style={{ flex: 1, ...defaultStyle }}>
       <View style={[{ flexDirection: 'row', justifyContent: 'space-between' }]}>
@@ -122,10 +134,7 @@ const workspace = (props: Props) => {
           Assigned workspace
         </Text>
         {otherOrgs?.workspace ? (
-          <Workspace
-            onPress={() => router.replace(`/wk/${otherOrgs?.workspace?.id}`)}
-            item={otherOrgs?.workspace}
-          />
+          <Workspace onPress={handlePress} item={otherOrgs?.workspace} />
         ) : (
           <EmptyText text="No assigned workspace yet" />
         )}
@@ -140,7 +149,14 @@ const styles = StyleSheet.create({});
 
 const Workspace = ({ item, onPress }: { item: WK; onPress: () => void }) => {
   return (
-    <Pressable onPress={onPress} style={{ width: '100%' }}>
+    <Pressable
+      onPress={onPress}
+      style={{
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+      }}
+    >
       <HStack gap={10} alignItems="center">
         <Avatar.Image
           source={{ uri: item?.organizationId?.avatar }}
@@ -170,6 +186,21 @@ const Workspace = ({ item, onPress }: { item: WK; onPress: () => void }) => {
           </View>
         </VStack>
       </HStack>
+
+      {item?.locked && (
+        <HStack
+          gap={5}
+          alignItems="center"
+          bg={colors.closeBackgroundColor}
+          px={5}
+          rounded={6}
+        >
+          <FontAwesome name="lock" size={20} color={colors.closeTextColor} />
+          <MyText poppins="Bold" style={{ color: colors.closeTextColor }}>
+            Locked
+          </MyText>
+        </HStack>
+      )}
     </Pressable>
   );
 };

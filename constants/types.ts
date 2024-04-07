@@ -190,6 +190,7 @@ export type WK = {
   workerId: Profile;
   active: boolean;
   leisure: boolean;
+  locked: boolean;
 };
 export type Person = {
   user: {
