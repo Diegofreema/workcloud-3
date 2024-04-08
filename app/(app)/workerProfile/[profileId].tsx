@@ -24,6 +24,7 @@ import { useData } from '@/hooks/useData';
 import axios from 'axios';
 import { supabase } from '@/lib/supabase';
 import { useDetailsToAdd } from '@/hooks/useDetailsToAdd';
+import { Button } from '@rneui/themed';
 type Props = {};
 
 const Profile = (props: Props) => {
@@ -159,23 +160,30 @@ const Profile = (props: Props) => {
 
       <HStack gap={20} mt={20}>
         {worker?.bossId !== id && (
-          <MyButton
-            loading={cancelling}
+          <Button
             onPress={handleRequest}
-            buttonColor={colors.dialPad}
-            style={{ borderRadius: 8, height: 45 }}
+            loading={cancelling}
+            titleStyle={{ fontFamily: 'PoppinsMedium' }}
+            buttonStyle={{
+              backgroundColor: colors.dialPad,
+              borderRadius: 5,
+            }}
           >
             {isInPending ? 'Cancel Request' : 'Send Request'}
-          </MyButton>
+          </Button>
         )}
-        <MyButton
+
+        <Button
           onPress={startChannel}
-          buttonColor={colors.lightBlueButton}
-          textColor={colors.dialPad}
-          style={{ borderRadius: 8, height: 45 }}
+          loading={cancelling}
+          titleStyle={{ fontFamily: 'PoppinsMedium', color: 'blue' }}
+          buttonStyle={{
+            backgroundColor: colors.lightBlueButton,
+            borderRadius: 5,
+          }}
         >
           Send Message
-        </MyButton>
+        </Button>
       </HStack>
 
       <VStack mt={20} gap={15}>

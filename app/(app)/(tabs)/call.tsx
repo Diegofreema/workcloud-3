@@ -13,7 +13,11 @@ type Props = {};
 const callArray = Array.from({ length: 10 }, (_, i) => i + 1);
 
 const call = (props: Props) => {
-  return <Redirect href="/video/callList" />;
+  return (
+    <View>
+      <Text>fsdfsdf</Text>
+    </View>
+  );
 };
 
 export default call;

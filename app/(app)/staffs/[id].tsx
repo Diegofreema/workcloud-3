@@ -1,5 +1,5 @@
 import { FlatList, StyleSheet, Text, View } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGetMyStaffs, useGetPersonalWorkers } from '@/lib/queries';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
@@ -30,7 +30,7 @@ const allRoles = [
 const Staffs = (props: Props) => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [selectId, setSelectId] = useState('');
-  const [workers, setWorkers] = useState<WorkType[]>();
+
   const { onClose, onOpen } = useAddStaff();
   const [role, setRole] = useState('All');
   const router = useRouter();
@@ -44,27 +44,15 @@ const Staffs = (props: Props) => {
     isRefetchError,
   } = useGetMyStaffs(id);
   console.log('🚀 ~ Staffs ~ data:', data);
-
-  useEffect(() => {
-    if (
-      !isPending ||
-      !isRefetching ||
-      !isError ||
-      !isRefetchError ||
-      !isPaused
-    ) {
-      setWorkers(data?.staffs);
+  const workers = useMemo(() => {
+    if (!data?.staffs) return [];
+    if (role === 'All') {
+      return data?.staffs;
     }
-  }, []);
 
-  useEffect(() => {
-    const filterData = data?.staffs?.filter((worker) =>
-      role === 'All' ? workers : worker.role === role
-    );
-    if (!filterData) return;
+    return data?.staffs?.filter((worker) => worker.role === role);
+  }, [data, role]);
 
-    setWorkers(filterData);
-  }, [role]);
   if (isError || isRefetchError || isPaused) {
     return <ErrorComponent refetch={refetch} />;
   }

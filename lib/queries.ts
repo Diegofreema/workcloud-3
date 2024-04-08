@@ -99,7 +99,10 @@ export const useProfile = (id: any) => {
 
 export const useGetWks = (id: any) => {
   const getWks = async () => {
-    const { data, error } = await supabase.from('workspace').select();
+    const { data, error } = await supabase
+      .from('workspace')
+      .select()
+      .eq('ownerId', id);
     return {
       wks: data as Wks[],
       error,
@@ -210,7 +213,8 @@ export const useGetOtherWorkers = (id: any) => {
   const getAllStaffs = async () => {
     const { data, error } = await supabase
       .from('worker')
-      .select(`*, userId (name, avatar, userId, email)`);
+      .select(`*, userId (name, avatar, userId, email)`)
+      .neq('userId', id);
     return {
       worker: data as Workers[],
       error,

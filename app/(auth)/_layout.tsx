@@ -8,17 +8,16 @@ import { StatusBar } from 'expo-status-bar';
 type Props = {};
 
 const AuthLayout = (props: Props) => {
-  const { getId, id, user } = useData();
-  console.log('🚀 ~ file: _layout.tsx:AuthLayout ~ user:', user, 'id', id);
+  const { getValues, id, user } = useData();
 
   const getUserStored = useCallback(() => {
-    getId();
+    getValues();
   }, []);
   useEffect(() => {
     getUserStored();
   }, []);
 
-  if (id) {
+  if (id && user?.id) {
     return <Redirect href={'/home'} />;
   }
 

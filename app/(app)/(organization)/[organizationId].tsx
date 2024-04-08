@@ -149,7 +149,7 @@ const OrganizationDetails = (props: Props) => {
   return (
     <>
       <CreateWorkspaceModal workspace={wks} />
-      <SelectRow organizationId={organization.id} />
+      <SelectRow organizationId={organization?.id} />
       <DeleteWksSpaceModal />
       <View style={{ flex: 1, paddingHorizontal: 20 }}>
         <AuthHeader

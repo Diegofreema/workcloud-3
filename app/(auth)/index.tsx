@@ -131,7 +131,8 @@ const validationSchema = yup.object().shape({
     .required('Password is required'),
 });
 export default function SignInScreen() {
-  const { getUserId, user, id } = useData();
+  const { getUser, setId, user, id } = useData();
+
   const router = useRouter();
 
   const {
@@ -161,11 +162,11 @@ export default function SignInScreen() {
             password,
           }
         );
-        console.log(data.user);
 
         if (data?.user) {
-          getUserId(data?.user);
-          // router.replace('/home');
+          getUser(data?.user);
+          setId(data?.user?.id);
+          router.replace('/home');
         }
       } catch (error: any) {
         Toast.show({

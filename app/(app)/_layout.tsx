@@ -13,41 +13,35 @@ import axios from 'axios';
 import { Person } from '@/constants/types';
 import { useData } from '@/hooks/useData';
 import { StatusBar } from 'expo-status-bar';
-import { StreamVideoClient } from '@stream-io/video-react-native-sdk';
+import { StreamVideoClient, User } from '@stream-io/video-react-native-sdk';
 
 const api = 'cnvc46pm8uq9';
 const client = StreamChat.getInstance(api);
 
 export default function AppLayout() {
-  const { id, getId, user } = useData();
-  const userProfile = {
+  const { id, getValues, user } = useData();
+  console.log('🚀 ~ AppLayout ~ user:', user?.streamToken);
+  const userProfile: User = {
     id: user?.id as string,
     name: user?.name as string,
+    image: user?.avatar as string,
   };
   const token: string = user?.streamToken as string;
 
-  const { data, refetch, isPaused, isPending, isError, isRefetching } =
-    useProfile(id as string);
-  console.log('🚀 ~ file: _layout.tsx:AppLayout ~ data:', data?.profile);
-
   useEffect(() => {
-    if (!data?.profile) {
-      return;
-    }
     console.log('Use effect working');
-    const { profile } = data;
-    if (!profile) return;
+
     const connectUser = async () => {
       try {
         console.log('Connected to stream 1');
 
         await client.connectUser(
           {
-            id: profile?.userId.toString() as string,
-            name: profile?.name,
-            image: profile?.avatar,
+            id: user?.id as string,
+            name: user?.name,
+            image: user?.avatar,
           },
-          profile?.streamToken
+          user?.streamToken
         );
         console.log('Connected to stream 2');
       } catch (error) {
@@ -60,7 +54,7 @@ export default function AppLayout() {
       client.disconnectUser();
       console.log('User disconnected');
     };
-  }, [client, data?.profile?.userId]);
+  }, [user]);
 
   // useEffect(() => {
   //     if (!data?.profile) {
@@ -95,20 +89,14 @@ export default function AppLayout() {
   };
 
   const getUserStored = useCallback(() => {
-    getId();
+    getValues();
   }, []);
 
   useEffect(() => {
     getUserStored();
   }, []);
-  if (isError || isPaused) {
-    return <ErrorComponent refetch={refetch} />;
-  }
 
-  if (isPending) {
-    return <LoadingComponent />;
-  }
-  if (!id) {
+  if (!id || !user?.id) {
     return <Redirect href={'/'} />;
   }
   return (

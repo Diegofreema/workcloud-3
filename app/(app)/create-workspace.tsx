@@ -26,6 +26,7 @@ import { format } from 'date-fns';
 import { useData } from '@/hooks/useData';
 import { createOrg } from '@/lib/helper';
 import { SelectList } from 'react-native-dropdown-select-list';
+import { Select } from '@gluestack-ui/themed';
 const validationSchema = yup.object().shape({
   organizationName: yup.string().required('Name of organization is required'),
   category: yup.string().required('Category is required'),
@@ -50,7 +51,7 @@ const CreateWorkSpace = (props: Props) => {
   const [show2, setShow2] = useState(false);
   const { darkMode } = useDarkMode();
   const router = useRouter();
-  const [file, setFile] = useState<FileObject[]>([]);
+
   const queryClient = useQueryClient();
 
   const onSelectImage = async () => {
@@ -98,33 +99,48 @@ const CreateWorkSpace = (props: Props) => {
       // @ts-ignore
 
       //
-      const { error } = await supabase.from('organization').insert({
-        name: values.organizationName,
-        category: values.category,
-        description: values.description,
-        avatar,
-        ownerId: id,
-        email: values.email,
-        location: values.location,
-        start: values.startTime,
-        end: values.endTime,
-        website: values.websiteUrl,
-        workDays: values.startDay + ' - ' + values.endDay,
-      });
+      const { data, error } = await supabase
+        .from('organization')
+        .insert({
+          name: values.organizationName,
+          category: values.category,
+          description: values.description,
+          avatar,
+          ownerId: id,
+          email: values.email,
+          location: values.location,
+          start: values.startTime,
+          end: values.endTime,
+          website: values.websiteUrl,
+          workDays: values.startDay + ' - ' + values.endDay,
+        })
+        .select()
+        .single();
 
       if (!error) {
-        queryClient.invalidateQueries({
-          queryKey: ['organizations', 'organization'],
-        });
-        resetForm();
-        Toast.show({
-          type: 'success',
-          text1: 'Success',
-          text2: 'Organization created successfully',
-          position: 'bottom',
-        });
-        // @ts-ignore
-        router.replace(`/(organization)/${id}`);
+        const { error: err } = await supabase
+          .from('user')
+          .update({
+            organizationId: data?.id,
+          })
+          .eq('userId', id);
+        if (!err) {
+          queryClient.invalidateQueries({
+            queryKey: ['organizations', 'organization'],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ['profile', id],
+          });
+          resetForm();
+          Toast.show({
+            type: 'success',
+            text1: 'Success',
+            text2: 'Organization created successfully',
+            position: 'top',
+          });
+
+          router.push(`/(app)/(organization)/${id}`);
+        }
       }
 
       if (error) {
@@ -284,6 +300,7 @@ const CreateWorkSpace = (props: Props) => {
           </>
           <>
             <InputComponent
+              autoCapitalize="none"
               label="Website Link"
               value={websiteUrl}
               onChangeText={handleChange('websiteUrl')}

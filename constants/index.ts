@@ -5,31 +5,31 @@ export const defaultStyle = {
 export const days = [
   {
     key: 'Sunday',
-    value: 'sunday',
+    value: 'Sunday',
   },
   {
     key: 'Monday',
-    value: 'monday',
+    value: 'Monday',
   },
   {
     key: 'Tuesday',
-    value: 'tuesday',
+    value: 'Tuesday',
   },
   {
     key: 'Wednesday',
-    value: 'wednesday',
+    value: 'Wednesday',
   },
   {
     key: 'Thursday',
-    value: 'thursday',
+    value: 'Thursday',
   },
   {
     key: 'Friday',
-    value: 'friday',
+    value: 'Friday',
   },
   {
     label: 'Saturday',
-    value: 'saturday',
+    value: 'Saturday',
   },
 ];
 

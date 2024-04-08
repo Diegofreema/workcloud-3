@@ -68,7 +68,7 @@ const AllStaffs = (props: Props) => {
 
   return (
     <View style={styles.container}>
-      <HeaderNav title="Add staff" RightComponent={RightComponent} />
+      <HeaderNav title="Add staff" />
       <FlatList
         onRefresh={handleRefetch}
         refreshing={onRefreshing}

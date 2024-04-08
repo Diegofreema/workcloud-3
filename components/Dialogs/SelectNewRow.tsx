@@ -34,7 +34,10 @@ export const SelectNewRow = ({ id }: { id: string }) => {
   const router = useRouter();
   useEffect(() => {
     const getWks = async () => {
-      const { data, error } = await supabase.from('workspace').select();
+      const { data, error } = await supabase
+        .from('workspace')
+        .select()
+        .eq('ownerId', userId);
       if (!error) {
         setWorkspace(data);
       }

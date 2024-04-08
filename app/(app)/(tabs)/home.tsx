@@ -68,8 +68,6 @@ export default function TabOneScreen() {
     }
   }, [id]);
 
-  console.log('🚀 ~ TabOneScreen ~ profileData:', profile);
-
   const {
     data: connections,
     refetch: refetchConnections,
@@ -84,12 +82,7 @@ export default function TabOneScreen() {
   const handleRefetch = () => {
     refetchConnections();
   };
-
-  useEffect(() => {
-    if (!profile?.organizationId?.id && profile?.workerId?.id) {
-      onOpen();
-    }
-  }, [profile?.organizationId?.id, profile?.workerId?.id]);
+  console.log(profile?.organizationId?.id, profile?.workerId?.id);
 
   if (isErrorConnections || isConnectionsPaused) {
     return <ErrorComponent refetch={handleRefetch} />;
@@ -103,6 +96,9 @@ export default function TabOneScreen() {
   const { connections: connectionsData } = connections;
   if (!profile) {
     return <LoadingComponent />;
+  }
+  if (!profile?.organizationId?.id && !profile?.workerId?.id) {
+    onOpen();
   }
   return (
     <View style={[defaultStyle, styles.container]}>

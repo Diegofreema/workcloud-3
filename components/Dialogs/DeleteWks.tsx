@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
 import { useData } from '@/hooks/useData';
+import { Button } from '@rneui/themed';
 
 export const DeleteWksSpaceModal = () => {
   const { onClose, id, isOpen } = useDeleteWks();
@@ -70,22 +71,30 @@ export const DeleteWksSpaceModal = () => {
           </MyText>
 
           <HStack gap={10}>
-            <MyButton
+            <Button
               disabled={deleting}
-              buttonColor={colors.closeTextColor}
-              contentStyle={{ padding: 5 }}
+              titleStyle={{ fontFamily: 'PoppinsMedium' }}
+              buttonStyle={{
+                backgroundColor: colors.closeTextColor,
+                borderRadius: 5,
+                width: 120,
+              }}
               onPress={deleteWks}
-              labelStyle={{ fontSize: 15 }}
             >
               Delete
-            </MyButton>
-            <MyButton
-              contentStyle={{ padding: 5 }}
+            </Button>
+
+            <Button
+              titleStyle={{ fontFamily: 'PoppinsMedium' }}
+              buttonStyle={{
+                backgroundColor: colors.dialPad,
+                borderRadius: 5,
+                width: 120,
+              }}
               onPress={onClose}
-              labelStyle={{ fontSize: 15 }}
             >
               Cancel
-            </MyButton>
+            </Button>
           </HStack>
         </View>
       </Modal>
