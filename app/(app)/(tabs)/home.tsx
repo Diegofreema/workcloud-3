@@ -41,33 +41,42 @@ export default function TabOneScreen() {
   const { id } = useData();
   // console.log('🚀 ~ TabOneScreen ~ id:', id);
   const queryClient = useQueryClient();
+  const has = profile?.organizationId?.id && profile?.workerId?.id;
 
-  const profileData = useMemo(async () => {
-    try {
-      const getProfile = async () => {
-        const { data, error } = await supabase
-          .from('user')
-          .select(
-            `name, avatar, streamToken, email, userId, organizationId (*), workerId (*)`
-          )
-          .eq('userId', id)
-          .single();
-        // @ts-ignore
-        setProfile(data);
-        return data;
-      };
-      const res = await queryClient.fetchQuery({
-        queryKey: ['profile', id],
-        queryFn: getProfile,
-      });
+  useEffect(() => {
+    const getFn = async () => {
+      try {
+        const getProfile = async () => {
+          const { data, error } = await supabase
+            .from('user')
+            .select(
+              `name, avatar, streamToken, email, userId, organizationId (*), workerId (*)`
+            )
+            .eq('userId', id)
+            .single();
+          // @ts-ignore
+          setProfile(data);
+          return data;
+        };
+        const res = await queryClient.fetchQuery({
+          queryKey: ['profile', id],
+          queryFn: getProfile,
+        });
 
-      return res;
-    } catch (error) {
-      console.log(error);
-      return {};
-    }
+        return res;
+      } catch (error) {
+        console.log(error);
+        return {};
+      }
+    };
+    getFn();
   }, [id]);
-
+  useEffect(() => {
+    if (!profile) return;
+    if (!profile?.organizationId?.id && !profile?.workerId?.id) {
+      onOpen();
+    }
+  }, [profile]);
   const {
     data: connections,
     refetch: refetchConnections,
@@ -92,14 +101,12 @@ export default function TabOneScreen() {
     return <LoadingComponent />;
   }
 
-  // const { profile: user, error: err } = data;
   const { connections: connectionsData } = connections;
   if (!profile) {
     return <LoadingComponent />;
   }
-  if (!profile?.organizationId?.id && !profile?.workerId?.id) {
-    onOpen();
-  }
+  console.log('🚀 ~ TabOneScreen ~ has:', has);
+
   return (
     <View style={[defaultStyle, styles.container]}>
       <OrganizationModal />

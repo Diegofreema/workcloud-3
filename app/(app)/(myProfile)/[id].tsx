@@ -51,11 +51,9 @@ const MyProfile = (props: Props) => {
 
     getUser();
   }, []);
-  console.log('🚀 ~ MyProfile ~ user:', user);
 
   const numberOfWorkspace = user?.workspace?.length || 0;
 
-  console.log('🚀 ~ MyProfile ~', user);
   if (loading) {
     return <LoadingComponent />;
   }

@@ -36,22 +36,6 @@ export const BottomCard = ({ workId }: Props): JSX.Element => {
   };
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      <HeadingText
-        leftText="Call Records"
-        rightText="See all call records"
-        link={`/calls/${records}`}
-      />
-
-      <HStack
-        alignItems="center"
-        justifyContent="space-between"
-        style={{ flexWrap: 'wrap', marginTop: 10 }}
-      >
-        {fourItems.map((item, index) => (
-          <VideoPreview key={index} {...call} />
-        ))}
-      </HStack>
-
       <VStack mt={20}>
         <Pressable onPress={handleNavigate}>
           <HStack space="sm">

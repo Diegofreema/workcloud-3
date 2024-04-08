@@ -18,6 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useData } from '@/hooks/useData';
 import axios from 'axios';
 import { supabase } from '@/lib/supabase';
+import { Select } from '@gluestack-ui/themed';
 type Props = {};
 const validationSchema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -39,11 +40,11 @@ const max = 150;
 const genders = [
   {
     key: 'Male',
-    value: 'male',
+    value: 'Male',
   },
   {
     key: 'Female',
-    value: 'female',
+    value: 'Female',
   },
 ];
 const CreateProfile = (props: Props) => {
@@ -88,24 +89,43 @@ const CreateProfile = (props: Props) => {
       } = values;
 
       try {
-        const { error } = await supabase.from('worker').insert({
-          userId,
-          skills,
-          experience,
-          location,
-          gender,
-          qualifications,
-        });
+        const { data, error } = await supabase
+          .from('worker')
+          .insert({
+            userId,
+            skills,
+            experience,
+            location,
+            gender,
+            qualifications,
+          })
+          .select()
+          .single();
         if (!error) {
-          Toast.show({
-            type: 'success',
-            text1: 'Welcome to onboard',
-            text2: `${user?.name} your work profile was created`,
-          });
-          queryClient.invalidateQueries({ queryKey: ['profile'] });
+          const { error: err } = await supabase
+            .from('user')
+            .update({
+              workerId: data.id,
+            })
+            .eq('userId', id);
+          if (!err) {
+            Toast.show({
+              type: 'success',
+              text1: 'Welcome to onboard',
+              text2: `${user?.name} your work profile was created`,
+            });
+            queryClient.invalidateQueries({ queryKey: ['profile'] });
 
-          router.push(`/myWorkerProfile/${userId}`);
-          resetForm();
+            router.replace(`/myWorkerProfile/${id}`);
+            resetForm();
+          }
+          if (err) {
+            Toast.show({
+              type: 'error',
+              text1: 'Error, failed to create profile',
+              text2: 'Please try again',
+            });
+          }
         }
 
         if (error) {

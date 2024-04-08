@@ -163,7 +163,7 @@ const Profile = (props: Props) => {
           <Button
             onPress={handleRequest}
             loading={cancelling}
-            titleStyle={{ fontFamily: 'PoppinsMedium' }}
+            titleStyle={{ fontFamily: 'PoppinsMedium', fontSize: 12 }}
             buttonStyle={{
               backgroundColor: colors.dialPad,
               borderRadius: 5,
@@ -176,7 +176,11 @@ const Profile = (props: Props) => {
         <Button
           onPress={startChannel}
           loading={cancelling}
-          titleStyle={{ fontFamily: 'PoppinsMedium', color: 'blue' }}
+          titleStyle={{
+            fontFamily: 'PoppinsMedium',
+            color: 'blue',
+            fontSize: 12,
+          }}
           buttonStyle={{
             backgroundColor: colors.lightBlueButton,
             borderRadius: 5,

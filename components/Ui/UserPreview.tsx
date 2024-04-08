@@ -11,6 +11,7 @@ import { useState, useTransition } from 'react';
 import { supabase } from '@/lib/supabase';
 import Toast from 'react-native-toast-message';
 import { Button } from 'react-native-paper';
+import { useData } from '@/hooks/useData';
 
 type PreviewWorker = {
   name: any;
@@ -123,7 +124,7 @@ export const UserPreview = ({
 
 export const WorkPreview = ({ item }: { item: Requests }) => {
   console.log('🚀 ~ WorkPreview ~ item:', item);
-
+  const { id: userId } = useData();
   const [cancelling, setCancelling] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const {
@@ -168,14 +169,13 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
           text1: 'Request has been accepted',
         });
         queryClient.invalidateQueries({
-          queryKey: [
-            'request',
-            'single',
-            'worker',
-            'pending_requests',
-            'pending_worker',
-            'myStaffs',
-          ],
+          queryKey: ['request', from?.userId, to?.userId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['single', id],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['pending_requests', userId],
         });
       }
       if (error || err) {
@@ -214,7 +214,7 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
           queryKey: ['single', id],
         });
         queryClient.invalidateQueries({
-          queryKey: ['pending_requests', id],
+          queryKey: ['pending_requests', userId],
         });
       }
 
@@ -237,39 +237,33 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
   };
 
   return (
-    <VStack pr={20}>
-      <VStack
-        mr={10}
-        width={'90%'}
-        justifyContent="space-between"
-        alignItems="center"
-        gap={10}
-      >
-        <Image
-          source={{
-            uri: from?.organizationId?.avatar || 'https://placehold.co/100x100',
-          }}
-          style={{ width: 60, height: 60, borderRadius: 9999 }}
-          contentFit="cover"
-        />
+    <HStack pr={20} py={10} gap={6}>
+      <Image
+        source={{
+          uri: from?.organizationId?.avatar || 'https://placehold.co/100x100',
+        }}
+        style={{ width: 60, height: 60, borderRadius: 9999 }}
+        contentFit="cover"
+      />
+      <VStack mr={10} width={'90%'} justifyContent="space-between" gap={10}>
         <MyText
-          style={{ color: 'black', width: '100%' }}
+          style={{ color: 'black', width: '100%', paddingRight: 5 }}
           poppins="Medium"
-          fontSize={14}
+          fontSize={12}
         >
           {from?.organizationId?.name} wants you to be a representative on their
           workspace
         </MyText>
-        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={12}>
           Role : {role}
         </MyText>
-        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={12}>
           Responsibility : {responsibility}
         </MyText>
-        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={12}>
           Qualities : {qualities}
         </MyText>
-        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={14}>
+        <MyText style={{ color: 'black' }} poppins="Medium" fontSize={12}>
           Payment: {salary} naira
         </MyText>
 
@@ -279,6 +273,7 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
             style={{ borderRadius: 5 }}
             loading={cancelling}
             onPress={rejectRequest}
+            textColor="#0047FF"
           >
             <Text style={{ color: '#0047FF', fontFamily: 'PoppinsMedium' }}>
               Decline
@@ -289,6 +284,7 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
             style={{ borderRadius: 5 }}
             loading={accepting}
             onPress={acceptRequest}
+            textColor="white"
           >
             <Text style={{ color: 'white', fontFamily: 'PoppinsMedium' }}>
               Accept
@@ -296,6 +292,6 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
           </Button>
         </HStack>
       </VStack>
-    </VStack>
+    </HStack>
   );
 };

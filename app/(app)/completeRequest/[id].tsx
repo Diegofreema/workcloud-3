@@ -22,6 +22,9 @@ import Toast from 'react-native-toast-message';
 import { useQueryClient } from '@tanstack/react-query';
 import { useData } from '@/hooks/useData';
 import axios from 'axios';
+import { Button } from '@rneui/themed';
+import { colors } from '@/constants/Colors';
+import { ActivityIndicator } from 'react-native-paper';
 type Props = {};
 const validationSchema = yup.object().shape({
   role: yup.string().required('Role is required'),
@@ -218,7 +221,7 @@ const CompleteRequest = (props: Props) => {
               value={salary}
               onChangeText={handleChange('salary')}
               placeholder="Input a salary range in naira"
-              keyboardType="default"
+              keyboardType="numeric"
             />
             {touched.salary && errors.salary && (
               <Text style={{ color: 'red', fontWeight: 'bold' }}>
@@ -228,13 +231,26 @@ const CompleteRequest = (props: Props) => {
           </>
         </VStack>
 
-        <MyButton
-          loading={isSubmitting}
+        <Button
+          icon={
+            isSubmitting && (
+              <ActivityIndicator
+                style={{ marginRight: 10 }}
+                size={20}
+                color="white"
+              />
+            )
+          }
+          titleStyle={{ fontFamily: 'PoppinsMedium' }}
+          buttonStyle={{
+            backgroundColor: colors.dialPad,
+            borderRadius: 5,
+            marginTop: 25,
+          }}
           onPress={() => handleSubmit()}
-          style={{ marginTop: 30 }}
         >
           Send Request
-        </MyButton>
+        </Button>
       </ScrollView>
     </Container>
   );
