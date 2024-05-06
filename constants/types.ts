@@ -191,6 +191,7 @@ export type WK = {
   active: boolean;
   leisure: boolean;
   locked: boolean;
+  signedIn: boolean;
 };
 export type Person = {
   user: {
@@ -285,7 +286,7 @@ export type WorkType = {
     userId: string;
     workerId: number;
   };
-  workspaceId?: number;
+  workspaceId?: Workspace;
   bossId: string;
   role: string;
 };
@@ -302,6 +303,8 @@ export type Workspace = {
   salary: string;
   waitlist: number[];
   workerId: string;
+  locked: boolean;
+  signedIn: boolean;
 };
 
 export type WaitList = {

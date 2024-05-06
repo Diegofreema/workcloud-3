@@ -7,6 +7,7 @@ export type PartialUser = {
   email: string;
   streamToken?: string;
   avatar: string;
+  avatarUrl?: string;
 };
 type UserType = {
   id: string;

@@ -124,7 +124,7 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="call"
+          name="call/index"
           options={{
             title: 'Call logs',
             tabBarIcon: ({ focused, size }) => (
@@ -145,8 +145,15 @@ export default function TabLayout() {
                 Call logs
               </Text>
             ),
+            href: null,
           }}
         />
+        {/* <Tabs.Screen
+          name="call/videoCall"
+          options={{
+            href: null,
+          }}
+        /> */}
       </Tabs>
     </SafeAreaView>
   );

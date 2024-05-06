@@ -13,77 +13,46 @@ import axios from 'axios';
 import { Person } from '@/constants/types';
 import { useData } from '@/hooks/useData';
 import { StatusBar } from 'expo-status-bar';
-import { StreamVideoClient, User } from '@stream-io/video-react-native-sdk';
+import {
+  StreamVideo,
+  StreamVideoClient,
+  User,
+} from '@stream-io/video-react-native-sdk';
+import { useChatClient } from '@/useChatClient';
+import { AppProvider } from '@/AppContext';
+import { chatApiKey } from '../../chatConfig';
 
 const api = 'cnvc46pm8uq9';
-const client = StreamChat.getInstance(api);
+const client = StreamChat.getInstance('cnvc46pm8uq9');
 
 export default function AppLayout() {
+  const { clientIsReady } = useChatClient();
   const { id, getValues, user } = useData();
   console.log('🚀 ~ AppLayout ~ user:', user?.streamToken);
-  const userProfile: User = {
-    id: user?.id as string,
-    name: user?.name as string,
-    image: user?.avatar as string,
-  };
-  const token: string = user?.streamToken as string;
-
-  useEffect(() => {
-    console.log('Use effect working');
-
-    const connectUser = async () => {
-      try {
-        console.log('Connected to stream 1');
-
-        await client.connectUser(
-          {
-            id: user?.id as string,
-            name: user?.name,
-            image: user?.avatar,
-          },
-          user?.streamToken
-        );
-        console.log('Connected to stream 2');
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    connectUser();
-    return () => {
-      client.disconnectUser();
-      console.log('User disconnected');
-    };
-  }, [user]);
-
-  // useEffect(() => {
-  //     if (!data?.profile) {
-  //     return;
-  //   }
-  //   console.log('Use effect working');
-  //   const { profile } = data;
-  //   if (!profile) return;
-  //   const onConnectUser = async () => {
-  //     await clientVideo.connectUser(
-  //       {
-  //         id: profile.userId.toString(),
-  //         name: profile.name,
-  //         image: profile.avatar,
-  //       },
-  //       profile?.streamToken
-  //     );
+  // const [clientVideo] = useState(() => {
+  //   const userData = {
+  //     id: user?.id as string,
+  //     name: user?.name as string,
   //   };
-
-  //   onConnectUser();
-
-  //   return () => {
-  //     clientVideo.disconnectUser();
-  //   };
-  // }, [data?.profile?.userId, clientVideo]);
+  //   const tokenProvider = () => Promise.resolve(user?.streamToken as string);
+  //   return new StreamVideoClient({
+  //     chatApiKey,
+  //     tokenProvider,
+  //     userData,
+  //   });
+  // });
   const chatTheme: DeepPartial<Theme> = {
     channelPreview: {
       container: {
         backgroundColor: 'transparent',
+      },
+      title: {
+        fontFamily: 'PoppinsBold',
+        fontSize: 13,
+      },
+      message: {
+        fontFamily: 'PoppinsMedium',
+        fontSize: 10,
       },
     },
   };
@@ -99,17 +68,24 @@ export default function AppLayout() {
   if (!id || !user?.id) {
     return <Redirect href={'/'} />;
   }
+  if (!clientIsReady) {
+    return <LoadingComponent />;
+  }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="dark" />
-      <OverlayProvider value={{ style: chatTheme }}>
-        <Chat client={client}>
-          <Stack
-            screenOptions={{ headerShown: false }}
-            initialRouteName="(tabs)"
-          />
-        </Chat>
-      </OverlayProvider>
+      {/* <StreamVideo client={clientVideo}> */}
+      <AppProvider>
+        <OverlayProvider value={{ style: chatTheme }}>
+          <Chat client={client}>
+            <Stack
+              screenOptions={{ headerShown: false }}
+              initialRouteName="(tabs)"
+            />
+          </Chat>
+        </OverlayProvider>
+      </AppProvider>
+      {/* </StreamVideo> */}
     </GestureHandlerRootView>
   );
 }

@@ -1,8 +1,12 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useGetWks, usePersonalOrgs } from '../../../lib/queries';
+import {
+  useGetPersonalWk,
+  useGetWks,
+  usePersonalOrgs,
+} from '../../../lib/queries';
 import { useDarkMode } from '../../../hooks/useDarkMode';
 import { colors } from '../../../constants/Colors';
 import { EvilIcons } from '@expo/vector-icons';
@@ -21,6 +25,9 @@ import { WorkspaceDetails } from '@/components/WorkspaceDetails';
 import { Button } from 'react-native-paper';
 import { format } from 'date-fns';
 import workspace from '../(tabs)/organization';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Profile } from '@/constants/types';
 
 type Props = {};
 type SubProps = {
@@ -111,6 +118,8 @@ export const OrganizationItems = ({ name, text, website }: SubProps) => {
 };
 const OrganizationDetails = (props: Props) => {
   const { id } = useData();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
   const { organizationId } = useLocalSearchParams<{ organizationId: string }>();
   const { onOpen } = useCreate();
   const { darkMode } = useDarkMode();
@@ -123,8 +132,37 @@ const OrganizationDetails = (props: Props) => {
     isPending: isPendingWks,
     isError,
     isPaused: isPausedWks,
-  } = useGetWks(id);
+  } = useGetPersonalWk(id);
+  const queryClient = useQueryClient();
 
+  useEffect(() => {
+    const getFn = async () => {
+      try {
+        const getProfile = async () => {
+          const { data, error } = await supabase
+            .from('user')
+            .select(
+              `name, avatar, streamToken, email, userId, organizationId (*), workerId (*)`
+            )
+            .eq('userId', id)
+            .single();
+          // @ts-ignore
+          setProfile(data);
+          return data;
+        };
+        const res = await queryClient.fetchQuery({
+          queryKey: ['profile', id],
+          queryFn: getProfile,
+        });
+
+        return res;
+      } catch (error) {
+        console.log(error);
+        return {};
+      }
+    };
+    getFn();
+  }, [id]);
   const handleRefetch = () => {
     refetch();
   };
@@ -132,24 +170,24 @@ const OrganizationDetails = (props: Props) => {
   if (error || isError || isPaused || isPausedWks) {
     return <ErrorComponent refetch={handleRefetch} />;
   }
-  if (isPending || isPendingWks) {
+  if (isPending || isPendingWks || !profile) {
     return <LoadingComponent />;
   }
 
   const { organizations } = data;
 
   const { wks } = workspaces;
+  console.log('🚀 ~ OrganizationDetails ~ wks:', wks);
 
   const organization = organizations[0];
 
   const startDay = organization?.workDays?.split('-')[0];
-  console.log('🚀 ~ OrganizationDetails ~ startDay:', startDay);
   const endDay = organization?.workDays?.split('-')[1];
 
   return (
     <>
       <CreateWorkspaceModal workspace={wks} />
-      <SelectRow organizationId={organization?.id} />
+      <SelectRow organizationId={organization?.id} profile={profile} />
       <DeleteWksSpaceModal />
       <View style={{ flex: 1, paddingHorizontal: 20 }}>
         <AuthHeader

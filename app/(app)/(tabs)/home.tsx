@@ -40,8 +40,8 @@ export default function TabOneScreen() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const { id } = useData();
   // console.log('🚀 ~ TabOneScreen ~ id:', id);
-  const queryClient = useQueryClient();
   const has = profile?.organizationId?.id && profile?.workerId?.id;
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const getFn = async () => {

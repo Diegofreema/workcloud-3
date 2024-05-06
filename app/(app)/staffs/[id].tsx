@@ -10,13 +10,17 @@ import { colors } from '@/constants/Colors';
 import { Pressable } from 'react-native';
 import { DottedButton } from '@/components/Ui/DottedButton';
 import { WorkType, Workers } from '@/constants/types';
-import { AddStaff } from '@/components/Dialogs/AddStaff';
+import { AddStaff, Menu } from '@/components/Dialogs/AddStaff';
 import { useAddStaff } from '@/hooks/useAddStaff';
 import { SelectNewRow } from '@/components/Dialogs/SelectNewRow';
 import { HStack } from '@gluestack-ui/themed';
 import { WorkerProfileArray } from '../../../constants/types';
 import { UserPreview } from '@/components/Ui/UserPreview';
 import { EmptyText } from '@/components/EmptyText';
+import { useSelectNewRow } from '@/hooks/useSelectNewRow';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useHandleStaff } from '@/hooks/useHandleStaffs';
+import { RemoveUser } from '@/components/Dialogs/RemoveUser';
 
 type Props = {};
 const allRoles = [
@@ -30,8 +34,11 @@ const allRoles = [
 const Staffs = (props: Props) => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [selectId, setSelectId] = useState('');
+  const [isVisible, setIsVisible] = useState(false);
+  const { onOpen: onOpenSelectRowModal, onClose: onCloseSelectRow } =
+    useSelectNewRow();
+  const { getItem, item: staff } = useHandleStaff();
 
-  const { onClose, onOpen } = useAddStaff();
   const [role, setRole] = useState('All');
   const router = useRouter();
   const {
@@ -43,7 +50,7 @@ const Staffs = (props: Props) => {
     isRefetching,
     isRefetchError,
   } = useGetMyStaffs(id);
-  console.log('🚀 ~ Staffs ~ data:', data);
+
   const workers = useMemo(() => {
     if (!data?.staffs) return [];
     if (role === 'All') {
@@ -64,11 +71,37 @@ const Staffs = (props: Props) => {
   const pendingStaffs = () => {
     router.push('/pending-staffs');
   };
+
+  const showMenu = (item: WorkType) => {
+    setIsVisible(true);
+    getItem(item);
+  };
   const { staffs } = data;
   console.log('🚀 ~ Staffs ~ wks:', staffs[0]);
+  const array: { icon: any; text: string }[] = [
+    {
+      icon: 'user-o',
+      text: 'View profile',
+    },
+    {
+      icon: 'send-o',
+      text: 'Send message',
+    },
+
+    {
+      icon: staff?.workspaceId?.locked ? 'unlock-alt' : 'lock',
+      text: staff?.workspaceId?.locked ? 'Unlock workspace' : 'Lock workspace',
+    },
+    {
+      icon: 'trash-o',
+      text: 'Remove staff',
+    },
+  ];
   return (
     <View style={styles.container}>
       <AddStaff />
+      <RemoveUser />
+      <Menu isVisible={isVisible} setIsVisible={setIsVisible} array={array} />
       <SelectNewRow id={id} />
       <AuthHeader path="Staffs" />
       <View style={{ marginBottom: 15 }}>
@@ -99,7 +132,7 @@ const Staffs = (props: Props) => {
           keyExtractor={(item) => item}
         />
         <HStack gap={10}>
-          <DottedButton text="Add New Staff" onPress={onOpen} />
+          <DottedButton text="Add New Staff" onPress={onOpenSelectRowModal} />
           <DottedButton
             isIcon={false}
             text="Pending Staffs"
@@ -113,13 +146,24 @@ const Staffs = (props: Props) => {
         refreshing={isRefetching}
         data={workers}
         renderItem={({ item }) => (
-          <UserPreview
-            id={item?.id}
-            imageUrl={item?.userId?.avatar}
-            name={item?.userId?.name}
-            subText={item?.role}
-            navigate
-          />
+          <HStack justifyContent="space-between" alignItems="center">
+            <UserPreview
+              id={item?.id}
+              imageUrl={item?.userId?.avatar}
+              name={item?.userId?.name}
+              subText={item?.role}
+            />
+            <Pressable
+              onPress={() => showMenu(item)}
+              style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+            >
+              <MaterialCommunityIcons
+                name="dots-vertical"
+                size={24}
+                color="black"
+              />
+            </Pressable>
+          </HStack>
         )}
         ListEmptyComponent={() => <EmptyText text={'No staffs found'} />}
       />

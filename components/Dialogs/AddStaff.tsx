@@ -16,6 +16,10 @@ import { LoadingComponent } from '../Ui/LoadingComponent';
 import { useQueryClient } from '@tanstack/react-query';
 import { FontAwesome } from '@expo/vector-icons';
 import { useAddStaff } from '@/hooks/useAddStaff';
+import { useHandleStaff } from '@/hooks/useHandleStaffs';
+import { useData } from '@/hooks/useData';
+import { useChatContext } from 'stream-chat-expo';
+import { useRemoveUser } from '@/hooks/useRemoveUser';
 
 const roles = [{ role: 'Add new staff' }];
 export const AddStaff = () => {
@@ -83,9 +87,136 @@ export const AddStaff = () => {
   );
 };
 
+type Props = {
+  isVisible: boolean;
+  setIsVisible: (value: boolean) => void;
+  array: { icon: any; text: any }[];
+};
+
+export const Menu = ({ isVisible, setIsVisible, array }: Props) => {
+  const queryClient = useQueryClient();
+  const { onOpen } = useRemoveUser();
+  const { client } = useChatContext();
+  const { user } = useData();
+  const router = useRouter();
+  const { item } = useHandleStaff();
+  const onClose = () => {
+    setIsVisible(false);
+  };
+  const onViewProfile = () => {
+    router.push(`/workerProfile/${item?.userId?.userId}`);
+    onClose();
+  };
+
+  const onRemoveStaff = async () => {
+    onOpen();
+    onClose();
+  };
+
+  const onSendMessage = async () => {
+    const channel = client.channel('messaging', {
+      members: [user?.id as string, item?.userId?.userId as any],
+    });
+
+    await channel.watch();
+
+    router.push(`/chat/${channel.id}`);
+    onClose();
+  };
+
+  const onUnlockWorkspace = async () => {
+    alert('Pressed');
+    const { error } = await supabase
+      .from('workspace')
+      .update({ locked: !item?.workspaceId?.locked })
+      .eq('id', item?.workspaceId?.id);
+    if (!error) {
+      Toast.show({
+        type: 'success',
+        text1: 'Workspace has been unlocked',
+      });
+      onClose();
+      queryClient.invalidateQueries({ queryKey: ['myStaffs', user?.id] });
+    }
+
+    if (error) {
+      console.log(error);
+
+      Toast.show({
+        type: 'error',
+        text1: 'Something went wrong',
+      });
+    }
+  };
+  const handlePress = (text: string) => {
+    console.log(text);
+
+    switch (text) {
+      case 'View profile':
+        onViewProfile();
+        break;
+      case 'Remove staff':
+        onRemoveStaff();
+        break;
+      case 'Send message':
+        onSendMessage();
+        break;
+      case 'Unlock workspace':
+        onUnlockWorkspace();
+        break;
+      case 'Lock workspace':
+        onUnlockWorkspace();
+        break;
+      default:
+        break;
+    }
+  };
+  return (
+    <View>
+      <Modal
+        hasBackdrop={true}
+        onDismiss={onClose}
+        animationIn={'slideInDown'}
+        isVisible={isVisible}
+        onBackButtonPress={onClose}
+        onBackdropPress={onClose}
+        style={{ alignItems: 'center', justifyContent: 'center' }}
+      >
+        <View style={styles.centeredView}>
+          <View style={{ marginTop: 20, width: '100%', gap: 14 }}>
+            {array.map(({ icon, text }, index) => (
+              <Pressable
+                key={index}
+                style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
+                onPress={() => handlePress(text)}
+              >
+                <HStack gap={15} alignItems="center" p={10}>
+                  <FontAwesome
+                    name={icon}
+                    size={28}
+                    color={text === 'Remove staff' ? 'red' : 'black'}
+                  />
+                  <MyText
+                    poppins="Medium"
+                    fontSize={13}
+                    style={{ color: text === 'Remove staff' ? 'red' : 'black' }}
+                  >
+                    {text}
+                  </MyText>
+                </HStack>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   centeredView: {
     backgroundColor: 'white',
+    width: 200,
     paddingVertical: 10,
     alignItems: 'center',
     shadowColor: '#000',
@@ -97,7 +228,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
 
-    borderRadius: 15,
+    borderRadius: 10,
   },
   trash: {
     backgroundColor: 'white',

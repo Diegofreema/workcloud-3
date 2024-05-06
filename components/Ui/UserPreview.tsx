@@ -1,7 +1,7 @@
 import { Requests, Workers } from '@/constants/types';
 import { HStack, VStack } from '@gluestack-ui/themed';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { router, useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { MyText } from './MyText';
 
@@ -123,7 +123,6 @@ export const UserPreview = ({
 };
 
 export const WorkPreview = ({ item }: { item: Requests }) => {
-  console.log('🚀 ~ WorkPreview ~ item:', item);
   const { id: userId } = useData();
   const [cancelling, setCancelling] = useState(false);
   const [accepting, setAccepting] = useState(false);
@@ -138,6 +137,7 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
     responsibility,
     qualities,
   } = item;
+  console.log(to);
 
   const queryClient = useQueryClient();
 
@@ -149,7 +149,7 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
         .update({
           salary: salary,
           responsibility: responsibility,
-          workerId: to?.workerId,
+          workerId: to?.userId,
         })
         .eq('id', workspaceId);
 
@@ -177,6 +177,7 @@ export const WorkPreview = ({ item }: { item: Requests }) => {
         queryClient.invalidateQueries({
           queryKey: ['pending_requests', userId],
         });
+        router.push('/organization');
       }
       if (error || err) {
         Toast.show({

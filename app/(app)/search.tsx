@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Searchbar, Avatar } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import { useDebounce } from 'use-debounce';
-import { useSearch } from '@/lib/queries';
+import { useSearch, useSearchName } from '@/lib/queries';
 import { ErrorComponent } from '@/components/Ui/ErrorComponent';
 import { LoadingComponent } from '@/components/Ui/LoadingComponent';
 import { HStack, VStack } from '@gluestack-ui/themed';
@@ -16,17 +16,28 @@ const Search = (props: Props) => {
   const [val] = useDebounce(value, 1000);
   const { data, refetch, isPaused, isPending, isError, isRefetching } =
     useSearch(val);
-
-  if (isError || isPaused) {
+  const {
+    data: nameData,
+    refetch: refetchName,
+    isPaused: isPausedName,
+    isPending: isPendingName,
+    isError: isErrorName,
+    isRefetching: isRefetchingName,
+  } = useSearchName(val);
+  const handleRefetch = () => {
+    refetchName();
+    refetch();
+  };
+  if (isError || isPaused || isErrorName || isPausedName) {
     return (
       <View style={styles.container}>
         <SearchHeader value={value} setValue={setValue} />
-        <ErrorComponent refetch={refetch} />
+        <ErrorComponent refetch={handleRefetch} />
       </View>
     );
   }
 
-  if (isPending) {
+  if (isPending || isPendingName) {
     return (
       <View style={styles.container}>
         <SearchHeader value={value} setValue={setValue} />
@@ -36,7 +47,9 @@ const Search = (props: Props) => {
   }
 
   const { organization } = data;
+  const { org } = nameData;
 
+  const orgs = [...organization, ...org];
   return (
     <View style={styles.container}>
       <SearchHeader value={value} setValue={setValue} />
@@ -55,12 +68,15 @@ const Search = (props: Props) => {
         )}
         style={{ marginTop: 20 }}
         showsVerticalScrollIndicator={false}
-        data={organization}
+        data={orgs}
         renderItem={({ item }) => {
-          console.log('🚀 ~ renderItem ~ item:', item);
-
           return <OrganizationItem item={item} />;
         }}
+        ListEmptyComponent={() => (
+          <Text style={{ color: 'white', fontFamily: 'PoppinsBold' }}>
+            No results found
+          </Text>
+        )}
       />
     </View>
   );

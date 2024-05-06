@@ -33,11 +33,12 @@ type Props = {};
 
 const Work = (props: Props) => {
   const { id } = useLocalSearchParams();
-  console.log('🚀 ~ Work ~ id:', id);
+
   const { id: userId } = useData();
   const [isActive, setIsActive] = useState(false);
   const [isLeisure, setIsLeisure] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { onOpen, generateToken, token, getWorkspaceId } = useToken();
   const queryClient = useQueryClient();
   const {
@@ -72,40 +73,16 @@ const Work = (props: Props) => {
         {
           event: '*',
           schema: 'public',
-          table: 'workspace',
         },
         (payload) => {
           if (payload) {
             queryClient.invalidateQueries({ queryKey: ['wk', id] });
-          }
-          console.log('Change received!', payload);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'waitList',
-        },
-        (payload) => {
-          if (payload) {
             queryClient.invalidateQueries({ queryKey: ['waitList', id] });
-          }
-          console.log('Change received!', payload);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'request',
-        },
-        (payload) => {
-          if (payload) {
             queryClient.invalidateQueries({
               queryKey: ['pending_requests'],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ['myStaffs', userId],
             });
           }
           console.log('Change received!', payload);
@@ -139,7 +116,77 @@ const Work = (props: Props) => {
     setIsVisible(true);
   };
   const onProcessors = () => {};
-  const signOff = () => {};
+
+  const onSignOff = async () => {
+    try {
+      const { error: err } = await supabase
+        .from('workspace')
+        .update({ active: false, signedIn: false })
+        .eq('id', id);
+      if (err) {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to sign off',
+          text2: 'Something went wrong',
+        });
+      }
+
+      if (!err) {
+        Toast.show({
+          type: 'success',
+          text1: 'Signed off successfully',
+          text2: 'See you soon',
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Something went wrong',
+        text2: 'Failed to sign off',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  const onSignIn = async () => {
+    try {
+      const { error: err } = await supabase
+        .from('workspace')
+        .update({ active: true, signedIn: true })
+        .eq('id', id);
+      if (err) {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed to sign in',
+          text2: 'Please again later',
+        });
+      }
+
+      if (!err) {
+        Toast.show({
+          type: 'success',
+          text1: 'Sign in successful',
+          text2: 'Welcome back',
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Something went wrong',
+        text2: 'Failed to sign in',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  const toggleSignIn = async () => {
+    setLoading(true);
+    if (wks.signedIn) {
+      onSignOff();
+    } else {
+      onSignIn();
+    }
+  };
   const onClose = () => {
     setIsVisible(false);
   };
@@ -147,44 +194,20 @@ const Work = (props: Props) => {
 
   const { waitList, error } = waitListData;
   console.log('🚀 ~ Work ~ waitList:', waitList);
-  const createAndSendMail = async (item: WaitList) => {
-    generateToken();
-    try {
-      const { data } = await axios.post(
-        'https://workserver-plum.vercel.app/auth/send-mail',
-        {
-          email: item?.customer?.email,
-          name: item?.customer?.name,
-          token: token,
-        }
-      );
-      Toast.show({
-        type: 'success',
-        text1: 'Code has been resent',
-        text2: data.message,
-      });
-      router.replace(`/video/call/${token}`);
-    } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error, something went wrong',
-        text2: error?.response?.data.error,
-      });
-    }
-  };
-  const openModal = () => {
-    onOpen();
-  };
+
   const onAddToCall = (item: WaitList) => {
     getWorkspaceId(item?.id);
     if (userId === wks?.workerId?.userId) {
-      createAndSendMail(item);
+      const callId = (Math.random() * 10000).toString();
+      router.push({
+        pathname: `/call/videoCall/${callId}`,
+        params: {
+          customerId: item?.customer?.userId,
+          workerId: wks.workerId?.userId,
+        },
+      });
 
       return;
-    }
-
-    if (userId === item.customer?.userId) {
-      openModal();
     }
   };
   return (
@@ -208,9 +231,11 @@ const Work = (props: Props) => {
           active={wks.active}
         />
         <Buttons
+          signedIn={wks.signedIn}
           onShowModal={showModal}
           onProcessors={onProcessors}
-          onSignOff={signOff}
+          onSignOff={toggleSignIn}
+          loading={loading}
         />
 
         <FlatList
@@ -284,8 +309,16 @@ type ButtonProps = {
   onShowModal: () => void;
   onProcessors: () => void;
   onSignOff: () => void;
+  loading: boolean;
+  signedIn: boolean;
 };
-const Buttons = ({ onShowModal, onProcessors, onSignOff }: ButtonProps) => {
+const Buttons = ({
+  onShowModal,
+  onProcessors,
+  onSignOff,
+  loading,
+  signedIn,
+}: ButtonProps) => {
   return (
     <HStack width={'100%'} justifyContent={'space-between'} gap={10} mt={20}>
       <MyButton
@@ -314,16 +347,17 @@ const Buttons = ({ onShowModal, onProcessors, onSignOff }: ButtonProps) => {
         Processors
       </MyButton>
       <MyButton
+        disabled={loading}
         onPress={onSignOff}
         style={{
           flex: 1,
           backgroundColor: 'transparent',
           borderWidth: 1,
-          borderColor: 'red',
+          borderColor: signedIn ? 'red' : colors.openBackgroundColor,
         }}
-        labelStyle={{ color: 'red' }}
+        labelStyle={{ color: signedIn ? 'red' : colors.openBackgroundColor }}
       >
-        Sign off
+        {signedIn ? 'Sign off' : 'Sign in'}
       </MyButton>
     </HStack>
   );
@@ -402,11 +436,12 @@ const BottomActive = ({
     if (!error) {
       Toast.show({
         type: 'success',
-        text1: 'Active status updated',
-        text2: 'Your active status has been updated',
+        text1: 'Leisure status updated',
+        text2: 'Your leisure status has been updated',
       });
     }
   };
+
   return (
     <BottomSheet
       modalProps={{}}

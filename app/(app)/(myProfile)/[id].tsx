@@ -14,9 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/constants/types';
 
-type Props = {};
-
-const MyProfile = (props: Props) => {
+const MyProfile = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [user, setUser] = useState<Profile | null>();
   const [loading, setLoading] = useState(false);

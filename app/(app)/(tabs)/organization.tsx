@@ -59,13 +59,13 @@ const workspace = (props: Props) => {
   const hasNoOrg = data === null;
   const { organizations } = data;
   const organization = organizations[0];
-  console.log(otherOrgs.workspace, 'dsccsdcds');
+
   const handlePress = () => {
     if (otherOrgs?.workspace?.locked) {
       Toast.show({
         type: 'info',
         text1: 'This workspace is locked',
-        text2: 'Please ask the admin to unlock it',
+        text2: 'Please wait till the admin unlocks it',
       });
       return;
     }
@@ -163,25 +163,30 @@ const Workspace = ({ item, onPress }: { item: WK; onPress: () => void }) => {
           size={50}
         />
         <VStack>
-          <Text variant="titleMedium">{item?.role}</Text>
+          <Text
+            style={{ fontFamily: 'PoppinsBold', color: 'black', fontSize: 13 }}
+          >
+            {item?.role}
+          </Text>
           <View
             style={{
               backgroundColor: item?.active
                 ? colors.openTextColor
                 : colors.closeBackgroundColor,
-              paddingHorizontal: 7,
+              paddingHorizontal: 2,
               borderRadius: 3,
+              alignItems: 'center',
             }}
           >
             <Text
-              variant="labelSmall"
               style={{
                 color: item?.active
                   ? colors.openBackgroundColor
                   : colors.closeTextColor,
+                fontFamily: 'PoppinsLight',
               }}
             >
-              {item?.active}
+              {item?.active ? 'Active' : 'Not active'}
             </Text>
           </View>
         </VStack>

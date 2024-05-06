@@ -69,13 +69,19 @@ const ErrorComponent = () => {
 };
 
 const Preview = (props: ChannelPreviewMessengerProps) => {
-  const { unread } = props;
+  const { unread, PreviewAvatar, latestMessagePreview } = props;
+
   const backgroundColor = unread ? colors.gray : 'transparent';
   return (
     <View style={{ backgroundColor: backgroundColor }}>
       <ChannelPreview
         {...props}
-        Preview={(items) => <ChannelPreviewMessenger {...items} />}
+        Preview={(items) => (
+          <ChannelPreviewMessenger
+            {...items}
+            PreviewTitle={items?.PreviewTitle}
+          />
+        )}
       />
     </View>
   );

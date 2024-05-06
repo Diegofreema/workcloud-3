@@ -10,7 +10,10 @@ import { VideoPreview } from '../Ui/VideoPreview';
 import { useAuth, useSignIn } from '@clerk/clerk-expo';
 import { useData } from '@/hooks/useData';
 import { FontAwesome } from '@expo/vector-icons';
+import { chatApiKey } from '@/chatConfig';
+import { StreamChat } from 'stream-chat';
 
+const chatClient = StreamChat.getInstance(chatApiKey);
 type Props = {
   workId?: any;
 };
@@ -31,7 +34,9 @@ export const BottomCard = ({ workId }: Props): JSX.Element => {
   };
 
   const logout = () => {
+    chatClient.disconnectUser();
     removeId();
+
     router.replace('/');
   };
   return (

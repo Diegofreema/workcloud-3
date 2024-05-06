@@ -34,7 +34,7 @@ export const WorkspaceItem = ({
         style={{
           fontFamily: 'PoppinsMedium',
           fontSize: 12,
-          color: darkMode ? 'white' : 'black',
+          color: 'black',
           textTransform: 'capitalize',
         }}
       >

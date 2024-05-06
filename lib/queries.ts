@@ -133,6 +133,25 @@ export const useGetWk = (id: any) => {
   });
 };
 
+export const useGetPersonalWk = (id: any) => {
+  const getWks = async () => {
+    const { data, error } = await supabase
+      .from('personal')
+      .select(`*, organizationId(*), workerId(*)`)
+      .eq('ownerId', id)
+      .single();
+    return {
+      wks: data as Wks,
+      error,
+    };
+  };
+
+  return useQuery({
+    queryKey: ['personal', id],
+    queryFn: async () => getWks(),
+  });
+};
+
 export const useGetWaitList = (id: any) => {
   const getWaitList = async () => {
     const { data, error } = await supabase
@@ -163,13 +182,35 @@ export const useSearch = (value: string) => {
       });
 
     return {
-      organization: data,
+      organization: data as Org[],
       error,
     };
   };
 
   return useQuery({
     queryKey: ['search', value],
+    queryFn: async () => getOrgs(),
+  });
+};
+export const useSearchName = (value: string) => {
+  console.log('🚀 ~ useSearch ~ value:', value);
+  const getOrgs = async () => {
+    const { data, error } = await supabase
+      .from('organization')
+      .select()
+      .textSearch('name', value, {
+        type: 'websearch',
+        config: 'english',
+      });
+
+    return {
+      org: data as Org[],
+      error,
+    };
+  };
+
+  return useQuery({
+    queryKey: ['search_name', value],
     queryFn: async () => getOrgs(),
   });
 };
@@ -283,7 +324,7 @@ export const useGetWorkerProfile = (id: any) => {
   const getWorker = async () => {
     const { data, error } = await supabase
       .from('worker')
-      .select(`*, userId (*), organizationId (name)`)
+      .select(`*, userId (*), organizationId (name, avatar)`)
       .eq('userId', id)
       .single();
     return {
@@ -337,7 +378,7 @@ export const useGetMyStaffs = (id: any) => {
   const getMyStaffs = async () => {
     const { data, error } = await supabase
       .from('worker')
-      .select('*, userId (*)')
+      .select('*, userId (*), workspaceId (*)')
       .eq('bossId', id);
     return {
       staffs: data as WorkType[],

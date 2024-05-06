@@ -29,7 +29,7 @@ type Props = {};
 
 const Profile = (props: Props) => {
   const { profileId } = useLocalSearchParams<{ profileId: string }>();
-  console.log('🚀 ~ Profile ~ profileId:', profileId);
+  // console.log('🚀 ~ Profile ~ profileId:', profileId);
   const { client } = useChatContext();
   const { user, id } = useData();
 

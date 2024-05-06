@@ -12,6 +12,8 @@ import Toast from 'react-native-toast-message';
 import { useQueryClient } from '@tanstack/react-query';
 import { FontAwesome } from '@expo/vector-icons';
 import { useData } from '@/hooks/useData';
+import { Profile } from '@/constants/types';
+import { useRouter } from 'expo-router';
 
 const roles = [
   'Manager',
@@ -51,29 +53,74 @@ const roles = [
   'ICT Support',
   'Customers Support',
 ];
-export const SelectRow = ({ organizationId }: { organizationId: number }) => {
+export const SelectRow = ({
+  organizationId,
+  profile,
+}: {
+  organizationId: number;
+  profile: Profile;
+}) => {
   const { isOpen, onClose } = useSelectRow();
   const queryClient = useQueryClient();
-
+  const router = useRouter();
   const { id } = useData();
+  console.log(profile.id);
 
   const createWorkspace = async (role: string) => {
+    if (!profile?.workerId?.id) {
+      Toast.show({
+        type: 'Info',
+        text1: 'Failed to create workspace',
+        text2: "Please create a worker's profile first",
+      });
+      router.push('/create-worker-profile');
+      return;
+    }
     try {
-      const { error } = await supabase
-        .from('workspace')
-        .insert({ role: role, ownerId: id, organizationId: organizationId });
+      const { data, error } = await supabase
+        .from('personal')
+        .upsert({
+          role: role,
+          ownerId: id,
+          organizationId: organizationId,
+          workerId: profile.workerId?.userId,
+        })
+        .select()
+        .single();
 
       if (!error) {
-        Toast.show({
-          type: 'success',
-          text1: 'Workspace created successfully',
-        });
-        queryClient.invalidateQueries({ queryKey: ['wks', id] });
+        const { error: err } = await supabase
+          .from('worker')
+          .update({
+            personalId: data?.id,
+            organizationId: profile?.organizationId?.id,
+          })
+          .eq('userId', id);
+        if (!err) {
+          Toast.show({
+            type: 'success',
+            text1: 'Workspace created successfully',
+          });
+          queryClient.invalidateQueries({ queryKey: ['personal', id] });
+        }
+
+        if (err) {
+          console.log(err);
+
+          Toast.show({
+            type: 'error',
+            text1: 'Something went wrong',
+            text2: 'Please try again later',
+          });
+        }
       }
       if (error) {
+        console.log(error, 'error');
+
         Toast.show({
           type: 'error',
           text1: 'Something went wrong',
+          text2: 'Please try again later',
         });
       }
     } catch (error) {

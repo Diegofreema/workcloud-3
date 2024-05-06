@@ -12,56 +12,115 @@ import { useQueryClient } from '@tanstack/react-query';
 import { FontAwesome } from '@expo/vector-icons';
 import { useDetailsToAdd } from '@/hooks/useDetailsToAdd';
 import axios from 'axios';
-import { Wks } from '@/constants/types';
+import { Profile, Wks } from '@/constants/types';
 import { supabase } from '@/lib/supabase';
 import { useData } from '@/hooks/useData';
+import Toast from 'react-native-toast-message';
 
 const roles = [
-  { role: 'Customer service' },
-  { role: 'Sales Representative' },
-  { role: 'Account opening processor' },
-  { role: 'Logistics' },
-  { role: 'ICT Processor' },
+  'Manager',
+  'Consultant',
+  'Team Leader',
+  'Business Analyst',
+  'Project Manager',
+  'Developer',
+  'Designer',
+  'Dentist',
+  'Content Creator',
+  'Marketer',
+  'Sales Representative',
+  'Customer Support',
+  'Human Resources Manager',
+  'Finance Manager',
+  'IT Support Specialist',
+  'Operations Manager',
+  'Legal Counsel',
+  'Quality Assurance Analyst',
+  'Data Analyst',
+  'Researcher',
+  'Trainer',
+  'Executive',
+  'Agent',
+  'Advisor',
+  'Therapist',
+  'Health Consultant',
+  'Entrepreneur',
+  'Publicist',
+  'Risk Manager',
+  'Control',
+  'Auditor',
+  'Account Officer',
+  'Help Desk',
+  'Complaint Desk',
+  'ICT Support',
+  'Customers Support',
 ];
 export const SelectNewRow = ({ id }: { id: string }) => {
   const { isOpen, onClose } = useSelectNewRow();
   const { getData } = useDetailsToAdd();
   const { id: userId } = useData();
-  const queryClient = useQueryClient();
-  const [workspace, setWorkspace] = useState<Wks[]>();
-  console.log('🚀 ~ SelectNewRow ~ workspace:', workspace);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
-  const router = useRouter();
+  const queryClient = useQueryClient();
+
   useEffect(() => {
-    const getWks = async () => {
-      const { data, error } = await supabase
-        .from('workspace')
-        .select()
-        .eq('ownerId', userId);
-      if (!error) {
-        setWorkspace(data);
-      }
-      return data;
-    };
-    const getWorkspaces = async () => {
+    const getFn = async () => {
       try {
-        await queryClient.fetchQuery({
-          queryKey: ['wks', userId],
-          queryFn: getWks,
+        const getProfile = async () => {
+          const { data, error } = await supabase
+            .from('user')
+            .select(
+              `name, avatar, streamToken, email, userId, organizationId (*), workerId (*)`
+            )
+            .eq('userId', userId)
+            .single();
+          // @ts-ignore
+          setProfile(data);
+          return data;
+        };
+        const res = await queryClient.fetchQuery({
+          queryKey: ['profile', userId],
+          queryFn: getProfile,
         });
+
+        return res;
       } catch (error) {
         console.log(error);
+        return {};
       }
     };
-    getWorkspaces();
-  }, []);
+    getFn();
+  }, [id]);
 
-  const navigate = (item: Wks) => {
-    console.log('🚀 ~ navigate ~ item:', item.organizationId);
+  const router = useRouter();
 
-    onClose();
-    getData(item.role, item.id, item.organizationId);
-    router.push(`/allStaffs`);
+  const navigate = async (item: string) => {
+    if (!profile) return;
+
+    const { data, error } = await supabase
+      .from('workspace')
+      .insert({
+        ownerId: userId,
+        role: item,
+        organizationId: profile.organizationId?.id,
+      })
+      .select()
+      .single();
+
+    if (!error) {
+      onClose();
+      getData(item, data.id, profile.organizationId?.id);
+      router.push(`/allStaffs`);
+    }
+    if (error) {
+      console.log(error, 'dnfkjnjsd');
+      onClose();
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Something went wrong',
+      });
+    }
   };
 
   return (
@@ -91,9 +150,9 @@ export const SelectNewRow = ({ id }: { id: string }) => {
           <View style={{ marginTop: 20, width: '100%', gap: 14 }}>
             <FlatList
               showsVerticalScrollIndicator={false}
-              data={workspace}
+              data={roles}
               ItemSeparatorComponent={() => <Divider style={styles.divider} />}
-              keyExtractor={(item) => item.role}
+              keyExtractor={(item) => item}
               renderItem={({ item }) => (
                 <Pressable
                   onPress={() => navigate(item)}
@@ -105,7 +164,7 @@ export const SelectNewRow = ({ id }: { id: string }) => {
                     p={10}
                   >
                     <MyText fontSize={13} poppins="Medium">
-                      {item?.role}
+                      {item}
                     </MyText>
                   </HStack>
                 </Pressable>

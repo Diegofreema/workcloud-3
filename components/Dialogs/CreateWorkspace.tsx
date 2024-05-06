@@ -16,7 +16,7 @@ import { EmptyText } from '../EmptyText';
 import { useRouter } from 'expo-router';
 import { Wks } from '@/constants/types';
 
-export const CreateWorkspaceModal = ({ workspace }: { workspace: Wks[] }) => {
+export const CreateWorkspaceModal = ({ workspace }: { workspace: Wks }) => {
   const { isOpen, onClose } = useCreate();
 
   const { onOpen: onSelectRow, onClose: onCloseRow } = useSelectRow();
@@ -28,19 +28,15 @@ export const CreateWorkspaceModal = ({ workspace }: { workspace: Wks[] }) => {
     onSelectRow();
   };
   const onDelete = (id: any) => {
-    console.log(id);
-
     getId(id);
     onOpenDelete();
     onClose();
   };
 
   const handlePress = (item: Wks) => {
-    if (item?.workerId) {
-      router.push(`/wk/${item.workerId}`);
-    } else {
-      router.push(`/staffs/${item.ownerId}`);
-    }
+    onClose();
+
+    router.push(`/wk/${item.id}`);
   };
   return (
     <View>
@@ -71,42 +67,38 @@ export const CreateWorkspaceModal = ({ workspace }: { workspace: Wks[] }) => {
             />
           </Pressable>
 
-          <DottedButton onPress={handleClose} text="Create personal WKS" />
+          {!workspace?.id && (
+            <DottedButton onPress={handleClose} text="Create personal WKS" />
+          )}
           <View style={{ marginTop: 20, width: '100%' }}>
-            <FlatList
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={() => (
-                <EmptyText text="No workspaces found" />
-              )}
-              data={workspace}
-              renderItem={({ item }) => (
-                <Pressable onPress={() => handlePress(item)}>
-                  <HStack
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={15}
-                    mx={5}
+            {workspace?.id && (
+              <Pressable onPress={() => handlePress(workspace)}>
+                <HStack
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={15}
+                  mx={5}
+                >
+                  <MyText fontSize={13} poppins="Medium">
+                    {workspace?.role}
+                  </MyText>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.trash,
+                      { opacity: pressed ? 0.5 : 1 },
+                    ]}
+                    onPress={() => onDelete(workspace?.id)}
                   >
-                    <MyText fontSize={13} poppins="Medium">
-                      {item?.role}
-                    </MyText>
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.trash,
-                        { opacity: pressed ? 0.5 : 1 },
-                      ]}
-                      onPress={() => onDelete(item?.id)}
-                    >
-                      <EvilIcons
-                        name="trash"
-                        size={24}
-                        color={colors.closeTextColor}
-                      />
-                    </Pressable>
-                  </HStack>
-                </Pressable>
-              )}
-            />
+                    <EvilIcons
+                      name="trash"
+                      size={24}
+                      color={colors.closeTextColor}
+                    />
+                  </Pressable>
+                </HStack>
+              </Pressable>
+            )}
+            {!workspace?.id && <EmptyText text="No personal WKS" />}
           </View>
         </View>
       </Modal>

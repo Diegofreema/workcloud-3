@@ -15,34 +15,43 @@ import Toast from 'react-native-toast-message';
 import axios from 'axios';
 import { useData } from '@/hooks/useData';
 import { Button } from '@rneui/themed';
+import { useHandleStaff } from '@/hooks/useHandleStaffs';
+import { useRemoveUser } from '@/hooks/useRemoveUser';
 
-export const DeleteWksSpaceModal = () => {
-  const { onClose, id, isOpen } = useDeleteWks();
-  const { id: userId } = useData();
+export const RemoveUser = () => {
+  const { onClose, isOpen } = useRemoveUser();
+  const { id } = useData();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
+  const { item } = useHandleStaff();
 
-  const deleteWks = async () => {
+  const removeUser = async () => {
     setDeleting(true);
     try {
-      const { error } = await supabase.from('personal').delete().eq('id', id);
+      const { error } = await supabase
+        .from('workspace')
+        .update({ userId: null, locked: true, signedIn: false, active: false })
+        .eq('workerId', item?.userId?.userId);
       if (!error) {
-        Toast.show({
-          type: 'success',
-          text1: 'Workspace deleted successfully',
-        });
-        queryClient.invalidateQueries({ queryKey: ['personal', userId] });
+        const { error: err } = await supabase
+          .from('worker')
+          .update({
+            organizationId: null,
+            bossId: null,
+            workspaceId: null,
+            role: null,
+          })
+          .eq('userId', item?.userId?.userId);
+        if (!err) {
+          queryClient.invalidateQueries({
+            queryKey: ['myStaffs', id],
+          });
+          Toast.show({
+            type: 'success',
+            text1: 'Staff has been removed successfully',
+          });
+        }
       }
-
-      if (error) {
-        console.log(error);
-
-        Toast.show({
-          type: 'error',
-          text1: 'Something went wrong',
-        });
-      }
-
       onClose();
     } catch (error) {
       console.log(error);
@@ -70,7 +79,7 @@ export const DeleteWksSpaceModal = () => {
             fontSize={17}
             style={{ textAlign: 'center', marginBottom: 15 }}
           >
-            Are you sure you want to delete this workspace?
+            Are you sure you want to remove this staff?
           </MyText>
 
           <HStack gap={10}>
@@ -82,9 +91,9 @@ export const DeleteWksSpaceModal = () => {
                 borderRadius: 5,
                 width: 120,
               }}
-              onPress={deleteWks}
+              onPress={removeUser}
             >
-              Delete
+              Remove
             </Button>
 
             <Button
