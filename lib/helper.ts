@@ -30,8 +30,8 @@ export const updateOrg = async (orgData: Org) => {
 
 export const checkLength = (value: string) => {
   if (!value) return '';
-  if (value.length > 35) {
-    return value.substring(0, 35) + '...';
+  if (value.length > 30) {
+    return value.substring(0, 30) + '...';
   } else {
     return value;
   }

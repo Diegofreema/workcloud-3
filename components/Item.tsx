@@ -38,7 +38,7 @@ export const Item = (item: ConnectionType & { isLastItemOnList?: boolean }) => {
             <MyText poppins="Bold" fontSize={10}>
               {item?.connectedTo?.name}
             </MyText>
-            <MyText poppins="Medium" fontSize={9}>
+            <MyText poppins="Medium" fontSize={10}>
               {checkLength(item?.connectedTo?.description)}
             </MyText>
           </VStack>
