@@ -29,6 +29,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { useData } from '@/hooks/useData';
+import { LoadingComponent } from '../Ui/LoadingComponent';
 const validationSchema = yup.object().shape({
   firstName: yup.string().required('First name is required'),
   lastName: yup.string().required('Last name is required'),
@@ -40,7 +41,7 @@ const validationSchema = yup.object().shape({
 export const ProfileUpdateForm = ({
   person,
 }: {
-  person: Profile;
+  person: Profile | null | undefined;
 }): JSX.Element => {
   console.log('🚀 ~ ProfileUpdateForm ~ person:', person);
   const phoneInputRef = useRef<PhoneInput>(null);
@@ -127,11 +128,10 @@ export const ProfileUpdateForm = ({
       setFieldValue('firstName', person.name.split(' ')[0]);
       setFieldValue('lastName', person.name.split(' ')[1]);
       setFieldValue('email', person.email);
-
       setFieldValue('date_of_birth', person.birthday);
       setFieldValue('phoneNumber', person.phoneNumber);
       setFieldValue('avatar', person.avatar);
-      phoneInputRef.current?.setValue(person.phoneNumber);
+      setFieldValue('phoneNumber', person.phoneNumber);
     }
   }, [person]);
 
@@ -172,13 +172,14 @@ export const ProfileUpdateForm = ({
       }
     }
   };
-  console.log(values.date_of_birth);
 
   const onConfirmIos = () => {
     setDateOfBirth(inputDate?.toISOString().split('T')[0] || '');
     setFieldValue('date_of_birth', dateOfBirth);
     onHideDatePicker();
   };
+
+  if (!person) return <LoadingComponent />;
 
   return (
     <ScrollView
@@ -264,25 +265,11 @@ export const ProfileUpdateForm = ({
           </>
 
           <>
-            <MyText
-              style={{
-                marginBottom: 5,
-
-                fontSize: 11,
-              }}
-              poppins="Medium"
-            >
-              Phone number
-            </MyText>
-            <PhoneInput
-              ref={phoneInputRef}
-              initialValue={values.phoneNumber}
-              initialCountry="ng"
-              textProps={{
-                placeholder: 'Enter a phone number...',
-              }}
-              onChangePhoneNumber={handleChange('phoneNumber')}
-              style={styles.phone}
+            <InputComponent
+              label="Phone Number"
+              onChangeText={handleChange('phoneNumber')}
+              placeholder="Phone Number"
+              value={values.phoneNumber}
             />
             {touched.phoneNumber && errors.phoneNumber && (
               <MyText poppins="Medium" style={styles.error}>

@@ -39,13 +39,19 @@ const Reception = (props: Props) => {
     refetch: refetchWorkers,
     isPaused: isPausedWorkers,
   } = useOrgsWorkers(data?.org?.id);
+
   useEffect(() => {
     if (data?.org?.ownerId === userId) return;
+
     const createConnection = async () => {
       const { error } = await supabase.from('connections').insert({
         owner: userId,
         connectedTo: id,
       });
+
+      if (error) {
+        console.log(error);
+      }
       if (!error) {
         queryClient.invalidateQueries({
           queryKey: ['connections', userId],
@@ -54,6 +60,7 @@ const Reception = (props: Props) => {
     };
     createConnection();
   }, [id, userId]);
+
   const handleRefetch = () => {
     refetch();
     refetchWorkers();
@@ -115,10 +122,12 @@ const Reception = (props: Props) => {
           </HStack>
         </VStack>
       </HStack>
+      <MyText poppins="Medium" fontSize={12} style={{ marginTop: 10 }}>
+        {org?.description}
+      </MyText>
       <View
         style={{
           marginLeft: 10,
-
           marginBottom: -30,
         }}
       >

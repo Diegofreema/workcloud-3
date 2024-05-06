@@ -46,7 +46,7 @@ const Edit = (props: Props) => {
   const [error, setError] = useState(false);
   const [organization, setOrganization] = useState();
   const [image, setImage] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { editId } = useLocalSearchParams<{ editId: string; id: string }>();
 
   const [show, setShow] = useState(false);
@@ -146,7 +146,6 @@ const Edit = (props: Props) => {
     },
   });
   const getOrgs = async () => {
-    setIsLoading(true);
     setError(false);
     try {
       const { data, error } = await supabase

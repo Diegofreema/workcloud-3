@@ -31,7 +31,7 @@ export const OrganizationModal = ({}: Props): JSX.Element => {
         <View style={{ alignItems: 'center' }}>
           <MyText
             poppins="Bold"
-            fontSize={20}
+            fontSize={17}
             style={{ textAlign: 'center', marginTop: 15 }}
           >
             Hi, start your journey on workcloud

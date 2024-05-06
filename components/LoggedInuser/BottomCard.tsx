@@ -1,4 +1,4 @@
-import { StyleSheet, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, ScrollView, Pressable, View } from 'react-native';
 import { HStack, VStack } from '@gluestack-ui/themed';
 import { Image } from 'expo-image';
 
@@ -39,10 +39,17 @@ export const BottomCard = ({ workId }: Props): JSX.Element => {
 
     router.replace('/');
   };
+  const onPress = () => {
+    if (workId) {
+      router.push(`/myWorkerProfile/${workId}`);
+    } else {
+      router.push('/create-worker-profile');
+    }
+  };
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <VStack mt={20}>
-        <Pressable onPress={handleNavigate}>
+        {/* <Pressable onPress={handleNavigate}>
           <HStack space="sm">
             <Image
               source={require('../../assets/images/settings.png')}
@@ -57,7 +64,7 @@ export const BottomCard = ({ workId }: Props): JSX.Element => {
               </MyText>
             </VStack>
           </HStack>
-        </Pressable>
+        </Pressable> */}
 
         <Pressable
           onPress={logout}
@@ -73,22 +80,23 @@ export const BottomCard = ({ workId }: Props): JSX.Element => {
             </MyText>
           </HStack>
         </Pressable>
-        {workId && (
+        <View style={{ marginTop: 'auto' }}>
           <Pressable
-            style={{
+            style={({ pressed }) => ({
               marginTop: 20,
               flexDirection: 'row',
               alignItems: 'center',
               gap: 10,
-            }}
-            onPress={() => router.push(`/myWorkerProfile/${workId}`)}
+              opacity: pressed ? 0.5 : 1,
+            })}
+            onPress={onPress}
           >
             <FontAwesome name="user" size={24} color={colors.lightBlue} />
             <MyText poppins="Medium" fontSize={13}>
-              Worker's Profile
+              {`${workId ? "Worker's" : "Create Worker's"} Profile`}
             </MyText>
           </Pressable>
-        )}
+        </View>
       </VStack>
     </ScrollView>
   );

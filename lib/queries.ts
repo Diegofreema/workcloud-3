@@ -306,7 +306,7 @@ export const useGetConnection = (id: any) => {
   const getConnections = async () => {
     const { data, error } = await supabase
       .from('connections')
-      .select(`*, connectedTo (*, organizationId(*))`)
+      .select(`*, connectedTo (*)`)
       .eq('owner', id);
 
     return {

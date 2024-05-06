@@ -27,3 +27,12 @@ export const updateOrg = async (orgData: Org) => {
     return { error: error.response.data.error };
   }
 };
+
+export const checkLength = (value: string) => {
+  if (!value) return '';
+  if (value.length > 35) {
+    return value.substring(0, 35) + '...';
+  } else {
+    return value;
+  }
+};

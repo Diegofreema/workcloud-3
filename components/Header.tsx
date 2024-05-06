@@ -30,7 +30,9 @@ export const Header = ({}: Props): JSX.Element => {
       <View style={styles.subContainer}>
         <Pressable
           onPress={onSearch}
-          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
+          style={({ pressed }) => [
+            { opacity: pressed ? 0.5 : 1, paddingHorizontal: 5 },
+          ]}
         >
           <EvilIcons
             name="search"

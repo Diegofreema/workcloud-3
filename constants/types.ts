@@ -213,7 +213,7 @@ export type Person = {
 export type ConnectionType = {
   id: number;
   owner: string;
-  connectedTo: WK;
+  connectedTo: Org;
   created_at: string;
 };
 

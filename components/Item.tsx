@@ -9,11 +9,14 @@ import { useData } from '@/hooks/useData';
 import { useChatContext } from 'stream-chat-expo';
 import { useRouter } from 'expo-router';
 import { ConnectionType } from '../constants/types';
+import { checkLength } from '@/lib/helper';
 
 export const Item = (item: ConnectionType & { isLastItemOnList?: boolean }) => {
   const router = useRouter();
+  console.log(item?.connectedTo);
+
   const startChannel = async () => {
-    router.push(`/reception/${item?.connectedTo?.organizationId?.id}`);
+    router.push(`/reception/${item?.connectedTo?.id}`);
   };
   return (
     <Pressable
@@ -26,35 +29,26 @@ export const Item = (item: ConnectionType & { isLastItemOnList?: boolean }) => {
       ]}
     >
       <HStack justifyContent="space-between" alignItems="center">
-        <HStack gap={7}>
+        <HStack gap={7} alignItems="center">
           <Image
-            source={{ uri: item?.connectedTo?.organizationId?.avatar }}
+            source={{ uri: item?.connectedTo?.avatar }}
             style={{ width: 48, height: 48, borderRadius: 9999 }}
           />
           <VStack>
             <MyText poppins="Bold" fontSize={10}>
-              {item?.connectedTo?.organizationId?.name}
+              {item?.connectedTo?.name}
             </MyText>
-            {/* <View
-              style={{
-                backgroundColor: item?.connectedTo
-                  ? colors.openTextColor
-                  : colors.closeBackgroundColor,
-                borderRadius: 9999,
-                paddingHorizontal: 5,
-                alignItems: 'center',
-              }}
-            >
-           
-            </View> */}
+            <MyText poppins="Medium" fontSize={9}>
+              {checkLength(item?.connectedTo?.description)}
+            </MyText>
           </VStack>
         </HStack>
         <VStack>
           <MyText poppins="Light" fontSize={9}>
-            Today
+            Time
           </MyText>
           <MyText poppins="Light" fontSize={9}>
-            {formatDistanceToNow(new Date(item?.created_at))}
+            {formatDistanceToNow(new Date(item?.created_at))} ago
           </MyText>
         </VStack>
       </HStack>
